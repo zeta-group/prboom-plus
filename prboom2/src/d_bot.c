@@ -57,7 +57,8 @@ extern player_t players[MAXPLAYERS];
 extern dboolean playeringame[MAXPLAYERS];
 
 
-
+static void D_PRBot_NextState(mbot_t *bot);
+static void D_PRBot_PrintState(mbot_t *bot);
 void P_PRBot_CheckInits(void);
 
 
@@ -98,7 +99,7 @@ void D_PRBotClear(mbot_t *mbot)
   D_SetMObj(&mbot->enemy, NULL);
   D_SetMObj(&mbot->want, NULL);
 
-  mbot->state = BST_LOOK; // initial state, may change
+  mbot->state = BST_LOOK;
   mbot->stcounter = 0;
 }
 
@@ -124,6 +125,11 @@ static void D_PRBotDoInit(mbot_t *mbot)
 
   mbot->mobj = players[mbot->playernum].mo;
   mbot->mobj->flags |= MF_FRIEND;
+
+  D_PRBot_NextState(mbot);
+  #ifdef BOTDEBUG
+  D_PRBot_PrintState(mbot);
+  #endif
 }
 
 void D_PRBotDeinit(mbot_t *mbot)
@@ -150,10 +156,12 @@ mbot_t *D_PRBotSpawn(void)
       continue;
     }
 
+    #ifdef BOTDEUG
     // I think there is a specific function in the PRBoom+ code
     // that does this that I have to call instead (not I_Error),
     // but I don't recall which one right now.
     printf("D_PRBotSpawn: spawned new PRBot at player start #%d\n", next_player);
+    #endif
 
     player_t *player = &players[next_player];
 
@@ -186,12 +194,18 @@ static inline void D_PRBotSanitizeState(mbot_t *bot)
     if (!deathmatch)
     {
       bot->state = BST_LOOK;
+      #ifdef BOTDEBUG
+      D_PRBot_PrintState(bot);
+      #endif
       break; // (don't break if dm)
     }
 
   BST_KILL: // don't hunt or kill if no enemy to hunt or kill!
     if (bot->enemy == NULL)
       bot->state = BST_LOOK;
+      #ifdef BOTDEBUG
+      D_PRBot_PrintState(bot);
+      #endif
     break;
     //-----^
 
@@ -202,6 +216,9 @@ static inline void D_PRBotSanitizeState(mbot_t *bot)
         bot->state = BST_LOOK;
       else
         bot->state = BST_CAUTIOUS;
+      #ifdef BOTDEBUG
+      D_PRBot_PrintState(bot);
+      #endif
     }
     break;
     //-----^
@@ -337,6 +354,35 @@ static void D_PRBot_KillOrRetreat(mbot_t *bot)
 }
 
 // Inquire a change of bot states.
+static void D_PRBot_PrintState(mbot_t *bot) {
+  char* st;
+
+  switch (bot->state) {
+    case BST_PREINIT:
+      st = (char *) "BST_PREINIT"; break;
+    case BST_RETREAT:
+      st = (char *) "BST_RETREAT"; break;
+    case BST_KILL:
+      st = (char *) "BST_KILL"; break;
+    case BST_DEAD:
+      st = (char *) "BST_DEAD"; break;
+    case BST_HUNT:
+      st = (char *) "BST_HUNT"; break;
+    case BST_LEAVE:
+      st = (char *) "BST_LEAVE"; break;
+    case BST_LOOK:
+      st = (char *) "BST_LOOK"; break;
+    case BST_NONE:
+      st = (char *) "(none)"; break;
+    case BST_CAUTIOUS:
+      st = (char *) "BST_CAUTIOUS"; break;
+    default:
+      st = (char *) "(unknown)"; break;
+  }
+
+  printf("D_PRBotSpawn: bot #%d is in state %s\n", bot->playernum, st);
+}
+
 static void D_PRBot_NextState(mbot_t *bot)
 {
   if (bot->enemy && P_IsVisible(bot->mobj, bot->enemy, true)) {
@@ -375,6 +421,10 @@ static void D_PRBot_NextState(mbot_t *bot)
 inline void D_PRBotTic_Look(mbot_t *bot)
 {
   // todo: look around (call D_PRBot_NextState first, but not D_PRBot_LookFind)
+  D_PRBot_NextState(bot);
+  #ifdef BOTDEBUG
+  D_PRBot_PrintState(bot);
+  #endif
 }
 
 inline void D_PRBotTic_Retreat(mbot_t *bot)
@@ -384,6 +434,9 @@ inline void D_PRBotTic_Retreat(mbot_t *bot)
     D_SetMObj(&bot->enemy, NULL);
 
     D_PRBot_NextState(bot);
+    #ifdef BOTDEBUG
+    D_PRBot_PrintState(bot);
+    #endif
   }
 
   // todo: movement part of retreating
@@ -397,11 +450,15 @@ inline void D_PRBotTic_Live(mbot_t *bot)
 inline void D_PRBotTic_Cautious(mbot_t *bot)
 {
   // todo: cautious
+  D_PRBot_NextState(bot);
+  #ifdef BOTDEBUG
+  D_PRBot_PrintState(bot);
+  #endif
 }
 
 inline void D_PRBotTic_Leave(mbot_t *bot)
 {
-  // todo: cautious
+  // todo: leave sector
 }
 
 void D_PRBotTic_Hunt(mbot_t *bot)
@@ -411,10 +468,17 @@ void D_PRBotTic_Hunt(mbot_t *bot)
     D_SetMObj(&bot->enemy, NULL);
 
     D_PRBot_NextState(bot);
+    #ifdef BOTDEBUG
+    D_PRBot_PrintState(bot);
+    #endif
   }
 
   else {
     // todo: finish hunt code
+    D_PRBot_NextState(bot);
+    #ifdef BOTDEBUG
+    D_PRBot_PrintState(bot);
+    #endif
   }
 }
 
@@ -434,21 +498,30 @@ void D_PRBotTic_Kill(mbot_t *bot)
     bot->player->cmd.buttons &= ~BT_ATTACK;
 
     D_PRBot_NextState(bot);
+    #ifdef BOTDEBUG
+    D_PRBot_PrintState(bot);
+    #endif
   }
 
   else if (!vis) {
     // this is deathmatch, activate hunt mode!
     bot->player->cmd.buttons &= ~BT_ATTACK;
     bot->state = BST_HUNT;
+    #ifdef BOTDEBUG
+    D_PRBot_PrintState(bot);
+    #endif
   }
 
   else if (bot->enemy->health > bot->mobj->health * 2 && bot->enemy->target == bot->mobj)
   {
     bot->player->cmd.buttons &= ~BT_ATTACK;
     bot->state = BST_RETREAT;
+    #ifdef BOTDEBUG
+    D_PRBot_PrintState(bot);
+    #endif
   }
 
-  else if (D_PRBot_LookToward(bot, bot->enemy))
+  else //if (D_PRBot_LookToward(bot, bot->enemy))
     bot->player->cmd.buttons |= BT_ATTACK;
 
   // todo: add movement part of attacking
@@ -527,6 +600,9 @@ void D_PRBotTic(mbot_t *bot)
     break;
     //-----^
   }
+
+  if (!netgame && bot->player && bot->state != BST_NONE)
+    G_BuildTiccmd(&netcmds[bot->playernum][maketic%BACKUPTICS]);
 }
 
 void P_PRBot_CheckInits(void)
