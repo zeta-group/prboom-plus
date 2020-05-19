@@ -39,6 +39,7 @@
 
 
 typedef enum {
+  BST_NONE,       // no bot here!
   BST_PREINIT,    // waiting for mobj initialization
   BST_LOOK,       // look around the map for something to do
   BST_HUNT,       // hunt down an enemy (equivalent to BST_LOOK in coop)
@@ -88,4 +89,4 @@ void D_PRBotTic_Hunt(mbot_t *bot);
 void D_PRBotTic_Kill(mbot_t *bot);
 void D_PRBotTic_Leave(mbot_t *bot);
 
-void D_PRBotTic(mbot_t *bot);
+void P_PRBot_Ticker(void);

@@ -189,7 +189,7 @@ cheatseq_t cheat[] = {
   CHEAT("fly",        NULL,               cht_never, cheat_fly, 0),
 
   // adds PRBot
-  CHEAT("prbota",     NULL,               cht_never, cheat_prbot_add, 0),
+  CHEAT("prbota",     NULL,               not_demo, cheat_prbot_add, 0),
   
   // end-of-list marker
   {NULL}

@@ -37,6 +37,7 @@
 #include "d_player.h"
 #include "p_setup.h"
 #include "m_random.h"
+#include "lprintf.h"
 #include "g_game.h"
 #include "r_main.h"
 #include "p_inter.h"
@@ -56,7 +57,8 @@ extern player_t players[MAXPLAYERS];
 extern dboolean playeringame[MAXPLAYERS];
 
 
-void P_PRBot_MobjThinker(mobj_t *mobj);
+
+void P_PRBot_CheckInits(void);
 
 
 // copied from p_enemy.c. Why static?!
@@ -75,25 +77,26 @@ static dboolean P_IsVisible(mobj_t *actor, mobj_t *mo, dboolean allaround)
 }
 
 
-static void D_PRBotSetObj(mbot_t *mbot, mobj_t **parm, mobj_t *other)
+static void D_SetMObj(mobj_t **parm, mobj_t *other)
 {
-  // use e.g. D_PRBotSetObj(mbot, &mbot->enemy, new_enemy)
-  assert((int)parm >= (int)mbot && (int)parm < (int)(mbot) + sizeof(mbot) && "Insecure mobj_t set operation detected (outside mbot_t bounds)");
-
+  // use e.g. D_SetMObj(&mbot->enemy, new_enemy)
   if (*parm)
   {
     (*parm)->thinker.references--;
   }
 
-  other->thinker.references++;
+  if (other) {
+    other->thinker.references++;
+  }
+  
   *parm = other;
 }
 
 void D_PRBotClear(mbot_t *mbot)
 {
-  D_PRBotSetObj(mbot, &mbot->avoid, NULL);
-  D_PRBotSetObj(mbot, &mbot->enemy, NULL);
-  D_PRBotSetObj(mbot, &mbot->want, NULL);
+  D_SetMObj(&mbot->avoid, NULL);
+  D_SetMObj(&mbot->enemy, NULL);
+  D_SetMObj(&mbot->want, NULL);
 
   mbot->state = BST_LOOK; // initial state, may change
   mbot->stcounter = 0;
@@ -107,10 +110,9 @@ void D_PRBotCallInit(mbot_t *mbot, int playernum)
     P_DamageMobj(mbot->mobj, NULL, NULL, 9000000);
   }
 
-  mbot->state = BST_PREINIT;
-
   D_PRBotClear(mbot);
 
+  mbot->state = BST_PREINIT;
   mbot->player = &players[playernum];
   mbot->playernum = playernum;
   mbot->mobj = NULL;
@@ -122,17 +124,19 @@ static void D_PRBotDoInit(mbot_t *mbot)
 
   mbot->mobj = players[mbot->playernum].mo;
   mbot->mobj->flags |= MF_FRIEND;
-
-  players[mbot->playernum].mo->thinker.function = P_PRBot_MobjThinker;
 }
 
 void D_PRBotDeinit(mbot_t *mbot)
 {
+  playeringame[mbot->playernum] = false;
+
   mbot->player = NULL;
   mbot->mobj = NULL;
   mbot->playernum = 0;
 
   D_PRBotClear(mbot);
+
+  mbot->state = BST_NONE;
 }
 
 mbot_t *D_PRBotSpawn(void)
@@ -141,15 +145,24 @@ mbot_t *D_PRBotSpawn(void)
 
   while (next_player < MAXPLAYERS)
   {
-    if (playeringame[next_player])
+    if (playeringame[next_player]) {
+      next_player++;
       continue;
+    }
+
+    // I think there is a specific function in the PRBoom+ code
+    // that does this that I have to call instead (not I_Error),
+    // but I don't recall which one right now.
+    printf("D_PRBotSpawn: spawned new PRBot at player start #%d\n", next_player);
 
     player_t *player = &players[next_player];
 
-    player->playerstate = PST_REBORN;
+    playeringame[next_player] = true;
+    P_SpawnPlayer(next_player, &playerstarts[next_player]);
 
     D_PRBotCallInit(&bots[next_player], next_player);
-    // D_PRBotTic_Live
+
+    break;
   }
 
   return NULL; // couldn't spawn bot; not enough player slots!
@@ -215,7 +228,7 @@ static dboolean PIT_FindBotTarget(mobj_t *mo)
   if (!P_IsVisible(actor, mo, false))
     return true;
 
-  D_PRBotSetObj(bot, &bot->enemy, mo);
+  D_SetMObj(&bot->enemy, mo);
 
   // Move the selected monster to the end of its associated
   // list, so that it gets searched last next time.
@@ -368,7 +381,7 @@ inline void D_PRBotTic_Retreat(mbot_t *bot)
 {
   if (bot->enemy->health <= 0 || bot->enemy->flags & MTF_FRIEND || bot->enemy->target != bot->mobj || !P_IsVisible(bot->mobj, bot->enemy, true))
   {
-    D_PRBotSetObj(bot, &bot->enemy, NULL);
+    D_SetMObj(&bot->enemy, NULL);
 
     D_PRBot_NextState(bot);
   }
@@ -395,7 +408,7 @@ void D_PRBotTic_Hunt(mbot_t *bot)
 {
   if (bot->enemy->health <= 0)
   {
-    D_PRBotSetObj(bot, &bot->enemy, NULL);
+    D_SetMObj(&bot->enemy, NULL);
 
     D_PRBot_NextState(bot);
   }
@@ -416,7 +429,7 @@ void D_PRBotTic_Kill(mbot_t *bot)
 
   if (bot->enemy->health <= 0 || bot->enemy->flags & MTF_FRIEND || (!vis && !deathmatch))
   {
-    D_PRBotSetObj(bot, &bot->enemy, NULL);
+    D_SetMObj(&bot->enemy, NULL);
 
     bot->player->cmd.buttons &= ~BT_ATTACK;
 
@@ -445,10 +458,8 @@ void D_PRBot_DoReborn(mbot_t *bot)
 {
   if (!netgame)
   {
-    // remove thinker and forget
-    bot->player = NULL;
-    bot->mobj->thinker.function = P_MobjThinker;
-    bot->mobj = NULL;
+    // forget about this bot
+    D_PRBotDeinit(bot);
   }
 
   else
@@ -456,12 +467,16 @@ void D_PRBot_DoReborn(mbot_t *bot)
     // respawn and reinitialize bot
     bot->player->playerstate = PST_REBORN;
     D_PRBotClear(bot);
+    G_DoReborn(bot->playernum);
   }
 }
 
 void D_PRBotTic(mbot_t *bot)
 {
-  assert(bot->mobj != NULL && "tried to tic bot with mbot_t::mobj not set");
+  assert(bot->mobj != NULL    && "tried to tic bot with mbot_t::mobj not set");
+  assert(bot->player != NULL  && "tried to tic bot with mbot_t::player not set");
+
+  // add consistency setters?
 
   if (!bot_control)
     return;
@@ -517,27 +532,33 @@ void D_PRBotTic(mbot_t *bot)
 void P_PRBot_CheckInits(void)
 {
   int i;
+
   for (i = 0; i < MAXPLAYERS; i++)
   {
-    if (bots[i].player && bots[i].state == BST_PREINIT)
-      D_PRBotDoInit(&bots[i]);
+    if (bots[i].player && bots[i].state == BST_PREINIT) {
+      if (bots[i].player->mo)
+        D_PRBotDoInit(&bots[i]);
+
+      else
+        I_Error("P_PRBot_CheckInits called prematurely: bot #%d player has no mobj set yet!", i);
+    }
   }
 }
 
-// Replaces a P_MobjThinker, but behaves
-// identically, unless it's a PRBot.
-void P_PRBot_MobjThinker(mobj_t *mobj)
-{
+void P_PRBot_Ticker(void) {
   int i;
+
+  P_PRBot_CheckInits();
 
   for (i = 0; i < MAXPLAYERS; i++)
   {
-    if (bots[i].mobj == mobj && bots[i].player)
+    if (bots[i].state != BST_PREINIT && bots[i].state != BST_NONE)
     {
+      assert(bots[i].player && "Player unset in ticked bot!");
+      assert(bots[i].mobj   && "Mobj unset in ticked bot!");
+
       D_PRBotTic(&bots[i]);
       break;
     }
   }
-
-  P_MobjThinker(mobj);
 }

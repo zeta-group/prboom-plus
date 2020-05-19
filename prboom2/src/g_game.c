@@ -62,6 +62,7 @@
 #include "p_map.h"
 #include "p_checksum.h"
 #include "d_main.h"
+#include "d_bot.h"
 #include "wi_stuff.h"
 #include "hu_stuff.h"
 #include "st_stuff.h"
@@ -107,7 +108,7 @@ static FILE    *demofp; /* cph - record straight to file */
 //e6y static 
 const byte *demo_p;
 const byte *demo_continue_p = NULL;
-static short    consistancy[MAXPLAYERS][BACKUPTICS];
+short    consistancy[MAXPLAYERS][BACKUPTICS];
 
 gameaction_t    gameaction;
 gamestate_t     gamestate;
@@ -1123,7 +1124,7 @@ void G_Ticker (void)
             {
               if (gametic > BACKUPTICS
                   && consistancy[i][buf] != cmd->consistancy)
-                I_Error("G_Ticker: Consistency failure (%i should be %i)",
+                I_Error("G_Ticker: Player %d consistency failure (%i should be %i)", i + 1,
             cmd->consistancy, consistancy[i][buf]);
               if (players[i].mo)
                 consistancy[i][buf] = players[i].mo->x;
@@ -1209,6 +1210,7 @@ void G_Ticker (void)
   switch (gamestate)
     {
     case GS_LEVEL:
+      P_PRBot_Ticker();
       P_Ticker ();
       P_WalkTicker();
       mlooky = 0;
