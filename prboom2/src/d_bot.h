@@ -71,9 +71,11 @@ void D_PRBot_DoReborn(mbot_t *bot);
 void D_PRBotInit(mbot_t *mbot, int playernum);
 mbot_t *D_PRBotSpawn(void); // spawns a bot to the game
 
-inline void D_PRBotTic_Live(mbot_t *bot);
-inline void D_PRBotTic_Look(mbot_t *bot);
-inline void D_PRBotTic_Retreat(mbot_t *bot);
-inline void D_PRBotTic_Cautious(mbot_t *bot);
+void D_PRBotTic_Live(mbot_t *bot);
+void D_PRBotTic_Look(mbot_t *bot);
+void D_PRBotTic_Retreat(mbot_t *bot);
+void D_PRBotTic_Cautious(mbot_t *bot);
+void D_PRBotTic_Hunt(mbot_t *bot);
+void D_PRBotTic_Kill(mbot_t *bot);
 
 void D_PRBotTic(mbot_t *bot);

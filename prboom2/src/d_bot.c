@@ -132,9 +132,18 @@ inline void D_PRBotTic_Cautious(mbot_t *bot) {
   // todo
 }
 
+void D_PRBotTic_Hunt(mbot_t *bot) {
+  // todo
+}
+
+void D_PRBotTic_Kill(mbot_t *bot) {
+  // todo
+}
+
+
 void D_PRBot_DoReborn(mbot_t *bot) {
   if (!netgame) {
-    // remove ticker and forget
+    // remove thinker and forget
     
   }
 
