@@ -37,6 +37,7 @@
 #include "p_inter.h"
 #include "p_tick.h"
 #include "m_cheat.h"
+#include "d_bot.h"
 #include "m_argv.h"
 #include "s_sound.h"
 #include "sounds.h"
@@ -91,6 +92,7 @@ static void cheat_megaarmour();
 static void cheat_health();
 static void cheat_notarget();
 static void cheat_fly();
+static void cheat_prbot_add();
 
 //-----------------------------------------------------------------------------
 //
@@ -185,6 +187,10 @@ cheatseq_t cheat[] = {
   CHEAT("notarget",   NULL,               cht_never, cheat_notarget, 0),
   // fly mode is active
   CHEAT("fly",        NULL,               cht_never, cheat_fly, 0),
+
+  // adds PRBot
+  CHEAT("prbota",     NULL,               cht_never, cheat_prbot_add, 0),
+  
   // end-of-list marker
   {NULL}
 };
@@ -640,6 +646,11 @@ static void cheat_fly()
     }
   }
 }
+
+static void cheat_prbot_add() {
+  D_PRBotSpawn();
+}
+
 
 //-----------------------------------------------------------------------------
 // 2/7/98: Cheat detection rewritten by Lee Killough, to avoid
