@@ -39,11 +39,13 @@
 
 
 typedef enum {
+  BST_PREINIT,    // waiting for mobj initialization
   BST_LOOK,       // look around the map for something to do
   BST_HUNT,       // hunt down an enemy (equivalent to BST_LOOK in coop)
   BST_RETREAT,    // retreat from action
   BST_KILL,       // kill enemy
   BST_CAUTIOUS,   // avoid projectiles and/or damaging sectors while only attacking immediate
+  BST_LEAVE,      // exit damaging sector
   BST_DEAD,       // dead, no-op
 } botstate_t;
 
@@ -54,6 +56,8 @@ typedef struct {
   player_t *player;
   mobj_t *mobj;
   int playernum;
+  int lastseenx;
+  int lastseeny;
   
   // bot AI
   mobj_t *enemy; // for monsters or other players
@@ -68,7 +72,12 @@ mbot_t bots[MAXPLAYERS];
 
 void D_PRBot_DoReborn(mbot_t *bot);
 
-void D_PRBotInit(mbot_t *mbot, int playernum);
+void D_PRBotClear(mbot_t *mbot);
+void D_PRBotCallInit(mbot_t *mbot, int playernum);
+void D_PRBotDeinit(mbot_t *mbot);
+
+dboolean D_PRBot_LookToward(mbot_t *bot, mobj_t *lookee);
+
 mbot_t *D_PRBotSpawn(void); // spawns a bot to the game
 
 void D_PRBotTic_Live(mbot_t *bot);
@@ -77,5 +86,6 @@ void D_PRBotTic_Retreat(mbot_t *bot);
 void D_PRBotTic_Cautious(mbot_t *bot);
 void D_PRBotTic_Hunt(mbot_t *bot);
 void D_PRBotTic_Kill(mbot_t *bot);
+void D_PRBotTic_Leave(mbot_t *bot);
 
 void D_PRBotTic(mbot_t *bot);

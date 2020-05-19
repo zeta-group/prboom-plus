@@ -35,175 +35,509 @@
 
 #include "d_bot.h"
 #include "d_player.h"
+#include "p_setup.h"
 #include "m_random.h"
 #include "g_game.h"
+#include "r_main.h"
+#include "p_inter.h"
+#include "p_pspr.h"
 #include "doomstat.h"
+#include "d_items.h"
+#include "p_map.h"
+#include "p_maputl.h"
 #include "assert.h"
+#include "p_tick.h"
 
 #define bot_control (!demoplayback && !democontinue && netgame)
 
 
-extern  player_t  players[MAXPLAYERS];
-extern  dboolean  playeringame[MAXPLAYERS];
+
+extern player_t players[MAXPLAYERS];
+extern dboolean playeringame[MAXPLAYERS];
 
 
+void P_PRBot_MobjThinker(mobj_t *mobj);
 
-void D_PRBotInit(mbot_t *mbot, int playernum) {
-  mbot->avoid = NULL;
-  mbot->enemy = NULL;
-  mbot->want = NULL;
 
-  mbot->player = &players[playernum];
-  mbot->mobj = players[playernum].mo;
-  mbot->playernum = playernum;
-  
-  mbot->state = BST_LOOK; // initial state, may change
-  mbot->stcounter = 0;
-
-  // note: add more assignments as the mbot_t struct grows
+// copied from p_enemy.c. Why static?!
+static dboolean P_IsVisible(mobj_t *actor, mobj_t *mo, dboolean allaround)
+{
+  if (!allaround)
+  {
+    angle_t an = R_PointToAngle2(actor->x, actor->y,
+                                 mo->x, mo->y) -
+                 actor->angle;
+    if (an > ANG90 && an < ANG270 &&
+        P_AproxDistance(mo->x - actor->x, mo->y - actor->y) > MELEERANGE)
+      return false;
+  }
+  return P_CheckSight(actor, mo);
 }
 
 
-mbot_t *D_PRBotSpawn(void) { // spawns a bot to the game
+static void D_PRBotSetObj(mbot_t *mbot, mobj_t **parm, mobj_t *other)
+{
+  // use e.g. D_PRBotSetObj(mbot, &mbot->enemy, new_enemy)
+  assert((int)parm >= (int)mbot && (int)parm < (int)(mbot) + sizeof(mbot) && "Insecure mobj_t set operation detected (outside mbot_t bounds)");
+
+  if (*parm)
+  {
+    (*parm)->thinker.references--;
+  }
+
+  other->thinker.references++;
+  *parm = other;
+}
+
+void D_PRBotClear(mbot_t *mbot)
+{
+  D_PRBotSetObj(mbot, &mbot->avoid, NULL);
+  D_PRBotSetObj(mbot, &mbot->enemy, NULL);
+  D_PRBotSetObj(mbot, &mbot->want, NULL);
+
+  mbot->state = BST_LOOK; // initial state, may change
+  mbot->stcounter = 0;
+}
+
+void D_PRBotCallInit(mbot_t *mbot, int playernum)
+{
+  if (mbot->mobj)
+  {
+    // lynch the impostor!
+    P_DamageMobj(mbot->mobj, NULL, NULL, 9000000);
+  }
+
+  mbot->state = BST_PREINIT;
+
+  D_PRBotClear(mbot);
+
+  mbot->player = &players[playernum];
+  mbot->playernum = playernum;
+  mbot->mobj = NULL;
+}
+
+static void D_PRBotDoInit(mbot_t *mbot)
+{
+  D_PRBotClear(mbot); // call a 2nd time to change BST_PREINIT to BST_LOOK
+
+  mbot->mobj = players[mbot->playernum].mo;
+  mbot->mobj->flags |= MF_FRIEND;
+
+  players[mbot->playernum].mo->thinker.function = P_PRBot_MobjThinker;
+}
+
+void D_PRBotDeinit(mbot_t *mbot)
+{
+  mbot->player = NULL;
+  mbot->mobj = NULL;
+  mbot->playernum = 0;
+
+  D_PRBotClear(mbot);
+}
+
+mbot_t *D_PRBotSpawn(void)
+{ // spawns a bot to the game
   int next_player = 0;
 
-  while (next_player < MAXPLAYERS) {
+  while (next_player < MAXPLAYERS)
+  {
     if (playeringame[next_player])
       continue;
-    
+
     player_t *player = &players[next_player];
 
     player->playerstate = PST_REBORN;
 
-    D_PRBotInit(&bots[next_player], next_player);
+    D_PRBotCallInit(&bots[next_player], next_player);
     // D_PRBotTic_Live
   }
 
   return NULL; // couldn't spawn bot; not enough player slots!
 }
 
-static inline void D_PRBotSanitizeState(mbot_t *bot) {
-  if (bot->mobj->health <= 0) {
-    if (bot->player->playerstate == PST_DEAD && bot->state != BST_DEAD) {
+static inline void D_PRBotSanitizeState(mbot_t *bot)
+{
+  if (bot->mobj->health <= 0)
+  {
+    if (bot->player->playerstate == PST_DEAD && bot->state != BST_DEAD)
+    {
       bot->stcounter = 20;
       bot->state = BST_DEAD;
     }
     return;
   }
 
-  switch (bot->state) {
-    BST_HUNT: // don't hunt in dm
-      if (!deathmatch) {
-        bot->state = BST_LOOK;
-        break; // (don't break if dm)
-      }
+  switch (bot->state)
+  {
+  BST_HUNT: // don't hunt in dm
+    if (!deathmatch)
+    {
+      bot->state = BST_LOOK;
+      break; // (don't break if dm)
+    }
 
-    BST_KILL: // don't hunt or kill if no enemy to hunt or kill!
-      if (bot->enemy == NULL)
-        bot->state = BST_LOOK;
-      break;
+  BST_KILL: // don't hunt or kill if no enemy to hunt or kill!
+    if (bot->enemy == NULL)
+      bot->state = BST_LOOK;
+    break;
     //-----^
 
-    BST_RETREAT:
-      if (bot -> enemy == NULL) {
-        if (bot -> avoid == NULL)
-          bot->state = BST_LOOK;
-        else
-          bot->state = BST_CAUTIOUS;
-      }
-      break;
+  BST_RETREAT:
+    if (bot->enemy == NULL)
+    {
+      if (bot->avoid == NULL)
+        bot->state = BST_LOOK;
+      else
+        bot->state = BST_CAUTIOUS;
+    }
+    break;
     //-----^
   }
 }
 
-inline void D_PRBotTic_Look(mbot_t *bot) {
-  // todo
+static mobj_t *current_actor;
+static mbot_t *current_bot;
+
+// Modified version of PIT_FindTarget.
+static dboolean PIT_FindBotTarget(mobj_t *mo)
+{
+  mobj_t *actor = current_actor;
+  mbot_t *bot = current_bot;
+
+  if (!(
+          (
+              (mo->flags ^ actor->flags) & MF_FRIEND) ||
+          (deathmatch && mo->type == MT_PLAYER)) &&
+      mo->health > 0 &&
+      (mo->flags & MF_COUNTKILL || mo->type == MT_SKULL || mo->type == MT_PLAYER))
+    return true; // Invalid target
+
+  if (!P_IsVisible(actor, mo, false))
+    return true;
+
+  D_PRBotSetObj(bot, &bot->enemy, mo);
+
+  // Move the selected monster to the end of its associated
+  // list, so that it gets searched last next time.
+  {
+    thinker_t *cap = &thinkerclasscap[mo->flags & MF_FRIEND ? th_friends : th_enemies];
+    (mo->thinker.cprev->cnext = mo->thinker.cnext)->cprev = mo->thinker.cprev;
+    (mo->thinker.cprev = cap->cprev)->cnext = &mo->thinker;
+    (mo->thinker.cnext = cap)->cprev = &mo->thinker;
+  }
+
+  return false;
 }
 
-inline void D_PRBotTic_Retreat(mbot_t *bot) {
-  // todo
+static dboolean D_PRBot_LookFind(mbot_t *bot)
+{
+  mobj_t *actor = bot->mobj;
+
+  thinker_t *th;
+  thinker_t *cap = &thinkerclasscap[deathmatch ? th_friends : th_enemies];
+
+  // Search for new enemy
+  if (cap->cnext != cap) // Empty list? bail out early
+  {
+    int x = P_GetSafeBlockX(actor->x - bmaporgx);
+    int y = P_GetSafeBlockY(actor->y - bmaporgy);
+    int d;
+
+    current_actor = actor;
+    current_bot = bot;
+
+    // Search first in the immediate vicinity.
+    if (!P_BlockThingsIterator(x, y, PIT_FindBotTarget))
+      return true;
+
+    for (d = 1; d < 5; d++)
+    {
+      int i = 1 - d;
+      do
+        if (!P_BlockThingsIterator(x + i, y - d, PIT_FindBotTarget) ||
+            !P_BlockThingsIterator(x + i, y + d, PIT_FindBotTarget))
+          return true;
+      while (++i < d);
+      do
+        if (!P_BlockThingsIterator(x - d, y + i, PIT_FindBotTarget) ||
+            !P_BlockThingsIterator(x + d, y + i, PIT_FindBotTarget))
+          return true;
+      while (--i + d >= 0);
+    }
+
+    { // Random number of monsters, to prevent patterns from forming
+      int n = (P_Random(pr_friends) & 31) + 15;
+
+      for (th = cap->cnext; th != cap; th = th->cnext)
+        if (--n < 0)
+        {
+          // Only a subset of the monsters were searched. Move all of
+          // the ones which were searched so far, to the end of the list.
+
+          (cap->cnext->cprev = cap->cprev)->cnext = cap->cnext;
+          (cap->cprev = th->cprev)->cnext = cap;
+          (th->cprev = cap)->cnext = th;
+          break;
+        }
+
+        else if (!PIT_FindBotTarget((mobj_t *)th)) // If target sighted
+          return true;
+    }
+  }
+
+  return false;
 }
 
-inline void D_PRBotTic_Live(mbot_t *bot) {
-  // todo
+dboolean D_PRBot_LookToward(mbot_t *bot, mobj_t *lookee)
+{
+  angle_t ang_targ = R_PointToAngle2(bot->mobj->x, bot->mobj->y, lookee->x, lookee->y);
+  angle_t ang_curr = bot->mobj->angle;
+
+  angle_t ang_diff_1 = ang_targ - ang_curr;
+  angle_t ang_diff_2 = ang_curr - ang_targ;
+
+  // check for unsigned wrap-arounds
+  angle_t ang_diff = ang_diff_1 < ang_diff_2 ? ang_diff_1 : ang_diff_2;
+
+  // todo: finish aiming code
+
+  if (ang_diff > ANG45)
+    ; // turn toward
+
+  else
+    ; // adjust slightly (with realistic aiming 'errors')
+
+  return ang_diff <= ANG45;
 }
 
-inline void D_PRBotTic_Cautious(mbot_t *bot) {
-  // todo
+// Either kill or retreat a target, depending on the
+// perceived feasibility of doing either.
+static void D_PRBot_KillOrRetreat(mbot_t *bot)
+{
+  mobj_t *targ = bot->enemy;
+
+  if (bot->enemy->health > bot->mobj->health * (bot->enemy->target == bot->mobj ? 2 : 3))
+    bot->state = BST_RETREAT;
+
+  else
+    bot->state = BST_KILL;
 }
 
-void D_PRBotTic_Hunt(mbot_t *bot) {
-  // todo
+// Inquire a change of bot states.
+static void D_PRBot_NextState(mbot_t *bot)
+{
+  if (bot->enemy && P_IsVisible(bot->mobj, bot->enemy, true)) {
+    bot->state = BST_KILL;
+    return;
+  }
+
+  bot->enemy = NULL; // no grudges.
+
+  if (D_PRBot_LookFind(bot))
+  {
+    D_PRBot_KillOrRetreat(bot);
+  }
+
+  else if (bot->avoid && P_IsVisible(bot->mobj, bot->avoid, true)) {
+    bot->state = BST_CAUTIOUS;
+    return;
+  }
+  
+  bot->avoid = NULL;
+
+  switch (bot->mobj->subsector->sector->special) {
+    case 5:
+    case 7:
+    case 16:
+    case 4:
+      bot->state = BST_CAUTIOUS; // run from damaging sector
+      break;
+
+    default:
+      bot->state = BST_LOOK;
+      break;
+  }
 }
 
-void D_PRBotTic_Kill(mbot_t *bot) {
-  // todo
+inline void D_PRBotTic_Look(mbot_t *bot)
+{
+  // todo: look around (call D_PRBot_NextState first, but not D_PRBot_LookFind)
 }
 
+inline void D_PRBotTic_Retreat(mbot_t *bot)
+{
+  if (bot->enemy->health <= 0 || bot->enemy->flags & MTF_FRIEND || bot->enemy->target != bot->mobj || !P_IsVisible(bot->mobj, bot->enemy, true))
+  {
+    D_PRBotSetObj(bot, &bot->enemy, NULL);
 
-void D_PRBot_DoReborn(mbot_t *bot) {
-  if (!netgame) {
-    // remove thinker and forget
-    
+    D_PRBot_NextState(bot);
+  }
+
+  // todo: movement part of retreating
+}
+
+inline void D_PRBotTic_Live(mbot_t *bot)
+{
+  // todo: live (stumbling and stuff)
+}
+
+inline void D_PRBotTic_Cautious(mbot_t *bot)
+{
+  // todo: cautious
+}
+
+inline void D_PRBotTic_Leave(mbot_t *bot)
+{
+  // todo: cautious
+}
+
+void D_PRBotTic_Hunt(mbot_t *bot)
+{
+  if (bot->enemy->health <= 0)
+  {
+    D_PRBotSetObj(bot, &bot->enemy, NULL);
+
+    D_PRBot_NextState(bot);
   }
 
   else {
+    // todo: finish hunt code
+  }
+}
+
+void D_PRBotTic_Kill(mbot_t *bot)
+{
+  int vis = P_IsVisible(bot->mobj, bot->enemy, true);
+
+  if (vis) {
+    bot->lastseenx = bot->enemy->x;
+    bot->lastseeny = bot->enemy->y;
+  }
+
+  if (bot->enemy->health <= 0 || bot->enemy->flags & MTF_FRIEND || (!vis && !deathmatch))
+  {
+    D_PRBotSetObj(bot, &bot->enemy, NULL);
+
+    bot->player->cmd.buttons &= ~BT_ATTACK;
+
+    D_PRBot_NextState(bot);
+  }
+
+  else if (!vis) {
+    // this is deathmatch, activate hunt mode!
+    bot->player->cmd.buttons &= ~BT_ATTACK;
+    bot->state = BST_HUNT;
+  }
+
+  else if (bot->enemy->health > bot->mobj->health * 2 && bot->enemy->target == bot->mobj)
+  {
+    bot->player->cmd.buttons &= ~BT_ATTACK;
+    bot->state = BST_RETREAT;
+  }
+
+  else if (D_PRBot_LookToward(bot, bot->enemy))
+    bot->player->cmd.buttons |= BT_ATTACK;
+
+  // todo: add movement part of attacking
+}
+
+void D_PRBot_DoReborn(mbot_t *bot)
+{
+  if (!netgame)
+  {
+    // remove thinker and forget
+    bot->player = NULL;
+    bot->mobj->thinker.function = P_MobjThinker;
+    bot->mobj = NULL;
+  }
+
+  else
+  {
     // respawn and reinitialize bot
     bot->player->playerstate = PST_REBORN;
-    D_PRBotInit(bot, bot->playernum);
+    D_PRBotClear(bot);
   }
 }
 
-void D_PRBotTic(mbot_t *bot) {
-    assert(bot->mobj != NULL && "tried to tic bot with mbot_t::mobj not set");
+void D_PRBotTic(mbot_t *bot)
+{
+  assert(bot->mobj != NULL && "tried to tic bot with mbot_t::mobj not set");
 
-    if (!bot_control) return;
+  if (!bot_control)
+    return;
 
-    if (bot->stcounter > 0)
-      bot->stcounter--;
+  if (bot->stcounter > 0)
+    bot->stcounter--;
 
-    // todo: have bots do something!
+  // todo: have bots do something!
 
-    D_PRBotSanitizeState(bot); // don't attack or retreat from imaginary enemies, etc
-    D_PRBotTic_Live(bot); // shudder and turn a bit so bots don't look like inanimate voodoo dolls when lazying around
+  D_PRBotSanitizeState(bot); // don't attack or retreat from imaginary enemies, etc
+  D_PRBotTic_Live(bot);      // shudder and turn a bit so bots don't look like inanimate voodoo dolls when lazying around
 
-    switch (bot->state) {
-      case BST_DEAD:
-        if (bot->stcounter <= 0) D_PRBot_DoReborn(bot);
-        return;
-      //======!
+  switch (bot->state)
+  {
+  case BST_DEAD:
+    if (bot->stcounter <= 0)
+      D_PRBot_DoReborn(bot);
+    return;
+    //======!
 
-      case BST_LOOK:
-        D_PRBotTic_Look(bot);
-        break;
-      //-----^
+  case BST_LOOK:
+    D_PRBotTic_Look(bot);
+    break;
+    //-----^
 
-      case BST_RETREAT:
-        D_PRBotTic_Retreat(bot);
-        break;
-      //-----^
+  case BST_RETREAT:
+    D_PRBotTic_Retreat(bot);
+    break;
+    //-----^
 
-      case BST_CAUTIOUS:
-        D_PRBotTic_Cautious(bot);
-        break;
-      //-----^
+  case BST_CAUTIOUS:
+    D_PRBotTic_Cautious(bot);
+    break;
+    //-----^
 
-      case BST_HUNT:
-        D_PRBotTic_Hunt(bot);
-        break;
-      //-----^
+  case BST_HUNT:
+    D_PRBotTic_Hunt(bot);
+    break;
+    //-----^
 
-      case BST_KILL:
-        D_PRBotTic_Kill(bot);
-        break;
-      //-----^
-    }
+  case BST_KILL:
+    D_PRBotTic_Kill(bot);
+    break;
+    //-----^
+
+  case BST_LEAVE:
+    D_PRBotTic_Leave(bot);
+    break;
+    //-----^
+  }
 }
 
-void P_PRBotThinker(void) {
+void P_PRBot_CheckInits(void)
+{
   int i;
-  for (i = 0; i < MAXPLAYERS; i++) {
-    if (bots[i].mobj != NULL && bots[i].player != NULL)
-      D_PRBotTic(&bots[i]);
+  for (i = 0; i < MAXPLAYERS; i++)
+  {
+    if (bots[i].player && bots[i].state == BST_PREINIT)
+      D_PRBotDoInit(&bots[i]);
   }
+}
+
+// Replaces a P_MobjThinker, but behaves
+// identically, unless it's a PRBot.
+void P_PRBot_MobjThinker(mobj_t *mobj)
+{
+  int i;
+
+  for (i = 0; i < MAXPLAYERS; i++)
+  {
+    if (bots[i].mobj == mobj && bots[i].player)
+    {
+      D_PRBotTic(&bots[i]);
+      break;
+    }
+  }
+
+  P_MobjThinker(mobj);
 }
