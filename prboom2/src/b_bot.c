@@ -54,12 +54,10 @@
 #include "p_tick.h"
 #include "p_spec.h"
 
-#include "stdio.h"
-
 #define bot_control (!demoplayback && !democontinue && netgame)
 
 #ifdef BOTDEBUG
-#define DEBUGPRINT(...) fprintf(stderr, __VA_ARGS__)
+#define DEBUGPRINT(...) printf(__VA_ARGS__)
 #else
 #define DEBUGPRINT(...) (void)0
 #endif
