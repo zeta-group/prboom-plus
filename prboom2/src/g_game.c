@@ -457,7 +457,7 @@ void G_BuildTiccmd(ticcmd_t* cmd)
 
   // don't take game input if in demo playback
   // mode
-  if (democontinue)
+  if (democontinue || clbotparm)
   {
     mousex = mousey = 0;
     return;

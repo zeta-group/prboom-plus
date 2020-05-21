@@ -548,6 +548,7 @@ void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, 
   {
     bot->stcounter = -10 - P_Random(pr_bot) / 80;
     bot->stvalue ^= P_Random(pr_bot) & 0xF;
+    cmd->forwardmove = 0;
   }
 
   else if (bot->stcounter == -1)
@@ -560,13 +561,13 @@ void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, 
   if (turn_anyway)
   {
     if (!(moveflags & BMF_NOTURN))
-      cmd->angleturn += (bot->stvalue & 1 ? 1 : -1);
+      cmd->angleturn += (bot->stvalue & 1 ? 1 + turn_density / 2 : -1 - turn_density / 2);
   }
 
   else if (bot->stcounter > 0)
   {
     if (!(moveflags & BMF_NOTURN))
-      cmd->angleturn += (bot->stvalue & 1 ? 2 : -2);
+      cmd->angleturn += (bot->stvalue & 1 ? 2 + turn_density : -2 - turn_density);
   }
 
   else
@@ -574,6 +575,8 @@ void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, 
 
   if (bot->stcounter < -1)
   {
+    bot->stcounter += 2; // don't worry, it'll be decremented later in PRBotTic
+  
     if (bot->stvalue & 0xA)
     {
       int movement = bot->stvalue & 0xE >> 1;
@@ -597,10 +600,8 @@ void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, 
         cmd->forwardmove += straightsteppy * 4;
 
       else if (!(moveflags & BMF_NOBACKWARD))
-        cmd->forwardmove -= straightsteppy * 4;
+        cmd->forwardmove -= straightsteppy * 3;
     }
-
-    bot->stcounter += 2; // don't worry, it'll be decremented later in PRBotTic
   }
 
   else
@@ -668,7 +669,7 @@ inline void D_PRBotTic_Look(mbot_t *bot)
     else
     {
       // turn around lots, and use and shoot compulsively
-      D_PRBot_Wander(bot, 4, SSTP_LITTLE, 0);
+      D_PRBot_Wander(bot, 5, SSTP_LITTLE, 0);
 
       cmd->buttons &= ~(BT_USE | BT_ATTACK);
 
@@ -857,8 +858,7 @@ void D_PRBotTic(mbot_t *bot)
   if (!bot_control)
     return;
 
-  if (bot->stcounter > 0)
-    bot->stcounter--;
+  bot->stcounter--;
 
   // todo: have bots do something!
 
