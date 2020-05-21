@@ -6,8 +6,8 @@ platform:
   - x64
  
 configuration:
-  - Release
   - Debug
+  - Release
 
 before_build:
     # Install libraries
