@@ -192,7 +192,7 @@ cheatseq_t cheat[] = {
   #ifdef BOTDEBUG
   CHEAT("tntbot",     NULL,               always,   cheat_prbot_add, 0),
   #else
-  CHEAT("tntbot",     NULL,               not_demo, cheat_prbot_add, 0),
+  CHEAT("tntbot",     NULL,               always,   cheat_prbot_add, 0),
   #endif
   
   // end-of-list marker

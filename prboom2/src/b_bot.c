@@ -54,10 +54,12 @@
 #include "p_tick.h"
 #include "p_spec.h"
 
+#include "stdio.h"
+
 #define bot_control (!demoplayback && !democontinue && netgame)
 
 #ifdef BOTDEBUG
-#define DEBUGPRINT(...) doom_printf(__VA_ARGS__)
+#define DEBUGPRINT(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define DEBUGPRINT(...) (void)0
 #endif
@@ -269,7 +271,7 @@ static dboolean PIT_FindBotTarget(mobj_t *mo)
 
   if (!(
           (
-              !(mo->flags & MF_FRIEND) ||
+              (mo->flags & MF_FRIEND ^ actor->flags & MF_FRIEND && mo->type != MT_PLAYER) ||
               (deathmatch && mo->type == MT_PLAYER)) &&
           mo->health > 0 &&
           (mo->flags & MF_COUNTKILL || mo->type == MT_SKULL || mo->type == MT_PLAYER)))
@@ -546,14 +548,13 @@ void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, 
 
   if (bot->stcounter == 0)
   {
-    bot->stcounter = -10 - P_Random(pr_bot) / 40;
+    bot->stcounter = -10 - P_Random(pr_bot) / 32;
     bot->stvalue ^= P_Random(pr_bot) & 0xF;
   }
 
   else if (bot->stcounter == -1)
   {
     bot->stcounter = 7 + P_Random(pr_bot) / 120 + 8 * turn_density;
-    bot->stvalue ^= P_Random(pr_bot) & 1;
   }
 
   dboolean turn_anyway = P_Random(pr_bot) < 40 + 15 * turn_density;
@@ -584,21 +585,21 @@ void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, 
         if (movement & 1)
         {
           if (!(moveflags & BMF_NOSIDES))
-            cmd->sidemove += sidesteppy / 40;
+            cmd->sidemove += sidesteppy * 3;
         }
 
         else
         {
           if (!(moveflags & BMF_NOSIDES))
-            cmd->sidemove -= sidesteppy / 40;
+            cmd->sidemove -= sidesteppy * 3;
         }
       }
 
       if (movement & 2 && !(moveflags & BMF_NOFORWARD))
-        cmd->forwardmove += straightsteppy / 32;
+        cmd->forwardmove += straightsteppy * 4;
 
       else if (!(moveflags & BMF_NOBACKWARD))
-        cmd->forwardmove -= straightsteppy / 32;
+        cmd->forwardmove -= straightsteppy * 4;
     }
 
     bot->stcounter += 2; // don't worry, it'll be decremented later in PRBotTic
@@ -633,10 +634,6 @@ inline void D_PRBotTic_Look(mbot_t *bot)
     // no, nothing interesting yet
     if (!(bot->gametics & 0x3) && bot->exploration > 0)
       bot->exploration--;
-
-#ifdef BOTDEBUG
-    DEBUGPRINT("D_PRBotTic_Look: PRBot #%d has %d non-boredom points.\n", bot->playernum + 1, bot->exploration);
-#endif
 
     if (bot->exploration > 60)
     {
@@ -700,18 +697,18 @@ void D_PRBot_Stumble(mbot_t *bot)
   ticcmd_t *cmd = &bot->player->cmd;
 
   if (bot->gametics & 1)
-    cmd->sidemove -= P_Random(pr_bot) / 120;
+    cmd->sidemove -= P_Random(pr_bot) / 8;
 
   else
-    cmd->sidemove += P_Random(pr_bot) / 120;
+    cmd->sidemove += P_Random(pr_bot) / 8;
 
   if (P_Random(pr_bot) < 180)
   {
     if (bot->gametics & 1)
-      cmd->sidemove -= P_Random(pr_bot) / 120;
+      cmd->sidemove -= P_Random(pr_bot) / 6;
 
     else
-      cmd->sidemove += P_Random(pr_bot) / 120;
+      cmd->sidemove += P_Random(pr_bot) / 6;
   }
 }
 
@@ -910,9 +907,6 @@ void D_PRBotTic(mbot_t *bot)
   }
 
   bot->gametics++;
-
-  if (bot->player && bot->state != BST_NONE)
-    G_BuildTiccmd(&netcmds[bot->playernum][maketic % BACKUPTICS]);
 }
 
 void P_PRBot_CheckInits(void)
