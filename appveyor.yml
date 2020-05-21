@@ -37,4 +37,4 @@ artifacts:
       type: Zip
 
 build:
-  project: $(APPVEYOR_BUILD_FOLDER)/$(APPVEYOR_PROJECT_NAME).sln
+  project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
