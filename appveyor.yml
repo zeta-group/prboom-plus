@@ -20,7 +20,6 @@ before_build:
     - 'vcpkg install libvorbis:%PLATFORM%-windows'
     - 'vcpkg install fluidsynth:%PLATFORM%-windows'
     - 'vcpkg install portmidi:%PLATFORM%-windows'
-    - 'vcpkg install libmad:%PLATFORM%-windows'
     - 'vcpkg install opengl:%PLATFORM%-windows'
         
     # Setup CMake
