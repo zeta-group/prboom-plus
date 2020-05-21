@@ -11,7 +11,17 @@ configuration:
 
 before_build:
     # Install libraries
-    - vcpkg install sdl2 sdl2-net sdl2-mixer sdl2-image pcre zlib libvorbis fluidsynth portmidi libmad opengl
+    - 'vcpkg install sdl2:$(PLATFORM)-windows'
+    - 'vcpkg install sdl2-net:$(PLATFORM)-windows'
+    - 'vcpkg install sdl2-mixer:$(PLATFORM)-windows'
+    - 'vcpkg install sdl2-image:$(PLATFORM)-windows'
+    - 'vcpkg install pcre:$(PLATFORM)-windows'
+    - 'vcpkg install zlib:$(PLATFORM)-windows'
+    - 'vcpkg install libvorbis:$(PLATFORM)-windows'
+    - 'vcpkg install fluidsynth:$(PLATFORM)-windows'
+    - 'vcpkg install portmidi:$(PLATFORM)-windows'
+    - 'vcpkg install libmad:$(PLATFORM)-windows'
+    - 'vcpkg install opengl:$(PLATFORM)-windows'
         
     # Setup CMake
     - 'cmake -G "Visual Studio 15 2017 Win64" -S ./prboom2 -B ./bin "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake"'
