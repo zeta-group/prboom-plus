@@ -24,7 +24,7 @@ before_build:
     - 'vcpkg install opengl:%PLATFORM%-windows'
         
     # Setup CMake
-    - 'cmake -G "Visual Studio 15 2017 Win64" -S ./prboom2 -B ./bin/%CONFIGURATION%/ "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake"'
+    - 'cmake -G "Visual Studio 15 2017 Win64" -S ./prboom2 "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake"'
 
 after_build:
     # Package PRBoom+ output together
