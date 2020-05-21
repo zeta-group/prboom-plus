@@ -57,7 +57,7 @@
 #define bot_control (!demoplayback && !democontinue && netgame)
 
 #ifdef BOTDEBUG
-#define DEBUGPRINT(...) printf(__VA_ARGS__)
+#define DEBUGPRINT(...) doom_printf(__VA_ARGS__)
 #else
 #define DEBUGPRINT(...) (void)0
 #endif
@@ -456,21 +456,24 @@ static void D_PRBot_PrintState(mbot_t *bot)
     break;
   }
 
-  printf("D_PRBot_NextState: bot #%d is in state %s\n", bot->playernum + 1, st);
+  BOTDEBUG("D_PRBot_NextState: bot #%d is in state %s\n", bot->playernum + 1, st);
 }
 
 static void D_PRBot_SetState(mbot_t *bot, botstate_t state)
 {
   bot->state = state;
   bot->stcounter = 0;
-  bot->player->cmd.buttons &= ~(BT_USE | BT_ATTACK);
-  bot->player->cmd.sidemove = 0;
-  bot->player->cmd.forwardmove = 0;
-  bot->player->cmd.angleturn = 0;
 
+  if (bot->player) {
+      bot->player->cmd.buttons &= ~(BT_USE | BT_ATTACK);
+      bot->player->cmd.sidemove = 0;
+      bot->player->cmd.forwardmove = 0;
+      bot->player->cmd.angleturn = 0;
+      
 #ifdef BOTDEBUG
-  D_PRBot_PrintState(bot);
+      D_PRBot_PrintState(bot);
 #endif
+  }
 }
 
 // Checks whether standing on damaging sector
