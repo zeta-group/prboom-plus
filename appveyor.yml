@@ -14,7 +14,20 @@ before_build:
     - vcpkg install sdl2 sdl2-net sdl2-mixer sdl2-image pcre zlib libvorbis fluidsynth portmidi libmad opengl
         
     # Setup CMake
-    - cmake -G "Visual Studio 15 2017 Win64" ./prboom2
+    - cmake -G "Visual Studio 15 2017 Win64" -S ./prboom2 -B bin "-DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake"
+
+artifacts:
+    - path: bin\debug\prboom-plus.exe
+      name: "PRBoom+"
+
+    - path: bin\debug\glboom-plus.exe
+      name: "GLBoom+"
+
+    - path: bin\debug\prboom-plus-game-server.exe
+      name: "PRBoom+ game server"
+
+    - path: bin\debug\prboom-plus.wad
+      name: "PRBoom+ game server"  
 
 build:
   project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
