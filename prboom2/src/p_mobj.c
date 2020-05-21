@@ -35,7 +35,7 @@
 #include "doomstat.h"
 #include "m_random.h"
 #include "r_main.h"
-#include "d_bot.h"
+#include "b_bot.h"
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_tick.h"

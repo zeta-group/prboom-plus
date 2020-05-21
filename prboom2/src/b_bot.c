@@ -34,12 +34,13 @@
  */
 
 #include "d_main.h"
-#include "d_bot.h"
+#include "b_bot.h"
 #include "d_player.h"
 #include "p_setup.h"
 #include "m_random.h"
 #include "lprintf.h"
 #include "g_game.h"
+#include "sounds.h"
 #include "r_main.h"
 #include "p_inter.h"
 #include "p_pspr.h"
@@ -47,16 +48,25 @@
 #include "d_items.h"
 #include "p_map.h"
 #include "p_maputl.h"
+#include "p_mobj.h"
+#include "s_sound.h"
 #include "assert.h"
 #include "p_tick.h"
+#include "p_spec.h"
 
 #define bot_control (!demoplayback && !democontinue && netgame)
+
+#ifdef BOTDEBUG
+#define DEBUGPRINT(...) printf(__VA_ARGS__)
+#else
+#define DEBUGPRINT(...) (void)0
+#endif
 
 extern player_t players[MAXPLAYERS];
 extern dboolean playeringame[MAXPLAYERS];
 
-static void D_PRBot_NextState(mbot_t *bot);
 static void D_PRBot_PrintState(mbot_t *bot);
+static void D_PRBot_NextState(mbot_t *bot);
 void P_PRBot_CheckInits(void);
 
 // copied from p_enemy.c. Why static?!
@@ -96,8 +106,13 @@ void D_PRBotClear(mbot_t *mbot)
   D_SetMObj(&mbot->enemy, NULL);
   D_SetMObj(&mbot->want, NULL);
 
-  mbot->state = BST_LOOK;
-  mbot->stcounter = 0;
+  D_PRBot_SetState(mbot, BST_LOOK);
+
+  mbot->exploration = 60; // 60 is 240 game tics; 240 / 35 is 6.8 seconds. This is a bot's patience in seconds. ADHD in a nutshell.
+  mbot->gametics = 0;
+
+  mbot->lastseenx = 0;
+  mbot->lastseeny = 0;
 }
 
 void D_PRBotCallInit(mbot_t *mbot, int playernum)
@@ -110,9 +125,13 @@ void D_PRBotCallInit(mbot_t *mbot, int playernum)
 
   D_PRBotClear(mbot);
 
-  mbot->state = BST_PREINIT;
+  D_PRBot_SetState(mbot, BST_PREINIT);
+
+  mbot->stcounter = 0;
+  mbot->stvalue = 0;
+
   mbot->player = &players[playernum];
-  mbot->playernum = playernum;
+  mbot->playernum = playernum; // though it should be the same index for bots lol
   mbot->mobj = NULL;
 }
 
@@ -123,10 +142,10 @@ static void D_PRBotDoInit(mbot_t *mbot)
   mbot->mobj = players[mbot->playernum].mo;
   mbot->mobj->flags |= MF_FRIEND;
 
+  // spawn teleport fog and make its noise thing
+  S_StartSound(P_SpawnMobj(mbot->mobj->x, mbot->mobj->y, mbot->mobj->z, MT_TFOG), sfx_telept);
+
   D_PRBot_NextState(mbot);
-#ifdef BOTDEBUG
-  D_PRBot_PrintState(mbot);
-#endif
 }
 
 // Replaces an existing player with a PRBot (does not change the player's state, e.g. ammo, location, etc)
@@ -140,7 +159,7 @@ mbot_t *D_PRBotReplace(int playernum)
 
   D_PRBotClear(mbot);
 
-  mbot->state = BST_PREINIT;
+  D_PRBot_SetState(mbot, BST_PREINIT);
   mbot->player = &players[playernum];
   mbot->playernum = playernum;
   mbot->mobj = players[mbot->playernum].mo;
@@ -148,24 +167,23 @@ mbot_t *D_PRBotReplace(int playernum)
   mbot->mobj->flags |= MF_FRIEND;
 
   D_PRBot_NextState(mbot);
-#ifdef BOTDEBUG
-  D_PRBot_PrintState(mbot);
-#endif
 
   return mbot;
 }
 
 void D_PRBotDeinit(mbot_t *mbot)
 {
+  BOTDEBUG("D_PRBotDeinit: Removed bot #%d from the game.\n", mbot->playernum + 1);
+
   playeringame[mbot->playernum] = false;
 
   mbot->player = NULL;
   mbot->mobj = NULL;
-  mbot->playernum = 0;
+  mbot->playernum = -1;
 
   D_PRBotClear(mbot);
 
-  mbot->state = BST_NONE;
+  D_PRBot_SetState(mbot, BST_NONE);
 }
 
 mbot_t *D_PRBotSpawn(void)
@@ -180,17 +198,17 @@ mbot_t *D_PRBotSpawn(void)
       continue;
     }
 
-#ifdef BOTDEUG
     // I think there is a specific function in the PRBoom+ code
     // that does this that I have to call instead (not I_Error),
     // but I don't recall which one right now.
-    printf("D_PRBotSpawn: spawned new PRBot at player start #%d\n", next_player);
-#endif
+    DEBUGPRINT("D_PRBotSpawn: spawned new PRBot at player start #%d\n", next_player + 1);
 
     player_t *player = &players[next_player];
-
     playeringame[next_player] = true;
+
+    // spawn player
     P_SpawnPlayer(next_player, &playerstarts[next_player]);
+
 
     D_PRBotCallInit(&bots[next_player], next_player);
 
@@ -207,7 +225,7 @@ static inline void D_PRBotSanitizeState(mbot_t *bot)
     if (bot->player->playerstate == PST_DEAD && bot->state != BST_DEAD)
     {
       bot->stcounter = 20;
-      bot->state = BST_DEAD;
+      D_PRBot_SetState(bot, BST_DEAD);
     }
     return;
   }
@@ -217,19 +235,13 @@ static inline void D_PRBotSanitizeState(mbot_t *bot)
   BST_HUNT: // don't hunt in dm
     if (!deathmatch)
     {
-      bot->state = BST_LOOK;
-#ifdef BOTDEBUG
-      D_PRBot_PrintState(bot);
-#endif
+      D_PRBot_SetState(bot, BST_LOOK);
       break; // (don't break if dm)
     }
 
   BST_KILL: // don't hunt or kill if no enemy to hunt or kill!
     if (bot->enemy == NULL)
-      bot->state = BST_LOOK;
-#ifdef BOTDEBUG
-    D_PRBot_PrintState(bot);
-#endif
+      D_PRBot_SetState(bot, BST_LOOK);
     break;
     //-----^
 
@@ -237,12 +249,9 @@ static inline void D_PRBotSanitizeState(mbot_t *bot)
     if (bot->enemy == NULL)
     {
       if (bot->avoid == NULL)
-        bot->state = BST_LOOK;
+        D_PRBot_SetState(bot, BST_LOOK);
       else
-        bot->state = BST_CAUTIOUS;
-#ifdef BOTDEBUG
-      D_PRBot_PrintState(bot);
-#endif
+        D_PRBot_SetState(bot, BST_CAUTIOUS);
     }
     break;
     //-----^
@@ -261,11 +270,9 @@ static dboolean PIT_FindBotTarget(mobj_t *mo)
   if (!(
           (
               !(mo->flags & MF_FRIEND) ||
-              (deathmatch && mo->type == MT_PLAYER)
-          ) &&
-      mo->health > 0 &&
-      (mo->flags & MF_COUNTKILL || mo->type == MT_SKULL || mo->type == MT_PLAYER)
-  ))
+              (deathmatch && mo->type == MT_PLAYER)) &&
+          mo->health > 0 &&
+          (mo->flags & MF_COUNTKILL || mo->type == MT_SKULL || mo->type == MT_PLAYER)))
     return true; // Invalid target
 
   if (!P_IsVisible(actor, mo, false))
@@ -322,7 +329,7 @@ static dboolean D_PRBot_LookFind(mbot_t *bot)
     }
 
     { // Random number of monsters, to prevent patterns from forming
-      int n = (P_Random(pr_friends) & 31) + 15;
+      int n = (P_Random(pr_bot) & 31) + 15;
 
       for (th = cap->cnext; th != cap; th = th->cnext)
         if (--n < 0)
@@ -344,17 +351,17 @@ static dboolean D_PRBot_LookFind(mbot_t *bot)
   return false;
 }
 
-#define MAXAIMOFFS (20 * (ANG45) / 45)
-#define TOAIMOFFS(a) ((a)*MAXAIMOFFS / ANG45)
+#define MAXAIMOFFS (10 * (ANG1))
+#define TOAIMOFFS(a) ((a) / ANG1 * MAXAIMOFFS)
 
 // Aims a bot toward its target.
 // Returns whether it thinks it has aimed
 // close enough to attempt firing.
-dboolean D_PRBot_LookToward(mbot_t *bot, mobj_t *lookee)
+dboolean D_PRBot_LookToward(mbot_t *bot, int x, int y)
 {
   ticcmd_t *cmd = &bot->player->cmd;
 
-  angle_t ang_targ = R_PointToAngle2(bot->mobj->x, bot->mobj->y, lookee->x, lookee->y);
+  angle_t ang_targ = R_PointToAngle2(bot->mobj->x, bot->mobj->y, x, y);
   angle_t ang_curr = bot->mobj->angle;
 
   // check for unsigned wrap-arounds
@@ -377,21 +384,24 @@ dboolean D_PRBot_LookToward(mbot_t *bot, mobj_t *lookee)
 
     int aim_amount = ang_diff * 0.8;
 
-    // aiming errors (the call to P_Random is why this
-    // only executes if not recording a compatible demo)
-    if (!demorecording || !clbotparm || compatibility_level == prboom_6_compatibility)
+    // calculate aiming errors
     {
-      // get aiming error
-      int turn_offs = P_Random(pr_friends);
+      // get random byte
+      int turn_offs = P_Random(pr_bot);
 
-      // convert angle measure and add to aim amount
-      aim_amount += TOAIMOFFS(turn_offs * ANG45 / 255 - ANG45 / 2);
+      // convert byte to scaled proper angle measure and add to aim amount
+      aim_amount += TOAIMOFFS(turn_offs * (ANG45 / 255) - ANG45 / 2);
     }
 
     cmd->angleturn += aim_amount;
   }
 
   return ang_diff <= ANG45;
+}
+
+dboolean D_PRBot_LookAt(mbot_t *bot, mobj_t *lookee)
+{
+  return D_PRBot_LookToward(bot, lookee->x, lookee->y);
 }
 
 // Either kill or retreat a target, depending on the
@@ -401,59 +411,102 @@ static void D_PRBot_KillOrRetreat(mbot_t *bot)
   mobj_t *targ = bot->enemy;
 
   if (bot->enemy->health > bot->mobj->health * (bot->enemy->target == bot->mobj ? 2 : 3))
-    bot->state = BST_RETREAT;
+    D_PRBot_SetState(bot, BST_RETREAT);
 
   else
-    bot->state = BST_KILL;
+    D_PRBot_SetState(bot, BST_KILL);
 }
 
 // Inquire a change of bot states.
 static void D_PRBot_PrintState(mbot_t *bot)
 {
-  char *st;
+  const char *st;
 
   switch (bot->state)
   {
   case BST_PREINIT:
-    st = (char *)"BST_PREINIT";
+    st = (const char *)"BST_PREINIT";
     break;
   case BST_RETREAT:
-    st = (char *)"BST_RETREAT";
+    st = (const char *)"BST_RETREAT";
     break;
   case BST_KILL:
-    st = (char *)"BST_KILL";
+    st = (const char *)"BST_KILL";
     break;
   case BST_DEAD:
-    st = (char *)"BST_DEAD";
+    st = (const char *)"BST_DEAD";
     break;
   case BST_HUNT:
-    st = (char *)"BST_HUNT";
+    st = (const char *)"BST_HUNT";
     break;
   case BST_LEAVE:
-    st = (char *)"BST_LEAVE";
+    st = (const char *)"BST_LEAVE";
     break;
   case BST_LOOK:
-    st = (char *)"BST_LOOK";
-    break;
-  case BST_NONE:
-    st = (char *)"(none)";
+    st = (const char *)"BST_LOOK";
     break;
   case BST_CAUTIOUS:
-    st = (char *)"BST_CAUTIOUS";
+    st = (const char *)"BST_CAUTIOUS";
+    break;
+  case BST_NONE:
+    st = (const char *)"(none)";
     break;
   default:
-    st = (char *)"(unknown)";
+    st = (const char *)"(unknown)";
     break;
   }
 
-  printf("D_PRBotSpawn: bot #%d is in state %s\n", bot->playernum, st);
+  printf("D_PRBot_NextState: bot #%d is in state %s\n", bot->playernum + 1, st);
+}
+
+static void D_PRBot_SetState(mbot_t *bot, botstate_t state)
+{
+  bot->state = state;
+  bot->stcounter = 0;
+  bot->player->cmd.buttons &= ~(BT_USE | BT_ATTACK);
+  bot->player->cmd.sidemove = 0;
+  bot->player->cmd.forwardmove = 0;
+  bot->player->cmd.angleturn = 0;
+
+#ifdef BOTDEBUG
+  D_PRBot_PrintState(bot);
+#endif
+}
+
+// Checks whether standing on damaging sector
+dboolean D_PRBot_AssessSectorDanger(mbot_t *bot)
+{
+  if (bot->mobj->z > bot->mobj->floorz)
+    return false; // no mid-air damage
+
+  sector_t *sector = bot->mobj->subsector->sector;
+
+  switch (sector->special)
+  {
+  case 5:
+  case 7:
+  case 16:
+  case 4:
+    // not sector special 11 because E1M8 is glorious!
+    return true;
+  }
+
+  switch ((sector->special & DAMAGE_MASK) >> DAMAGE_SHIFT)
+  {
+  case 0:
+    break;
+  default:
+    return true;
+  }
+
+  return false;
 }
 
 static void D_PRBot_NextState(mbot_t *bot)
 {
   if (bot->enemy && P_IsVisible(bot->mobj, bot->enemy, true))
   {
-    bot->state = BST_KILL;
+    D_PRBot_SetState(bot, BST_KILL);
     return;
   }
 
@@ -466,34 +519,165 @@ static void D_PRBot_NextState(mbot_t *bot)
 
   else if (bot->avoid && P_IsVisible(bot->mobj, bot->avoid, true))
   {
-    bot->state = BST_CAUTIOUS;
+    D_PRBot_SetState(bot, BST_CAUTIOUS);
     return;
   }
 
   bot->avoid = NULL;
 
-  switch (bot->mobj->subsector->sector->special)
-  {
-  case 5:
-  case 7:
-  case 16:
-  case 4:
-    bot->state = BST_CAUTIOUS; // run from damaging sector
-    break;
+  if (D_PRBot_AssessSectorDanger(bot))
+    D_PRBot_SetState(bot, BST_LEAVE);
 
-  default:
-    bot->state = BST_LOOK;
-    break;
+  else
+    D_PRBot_SetState(bot, BST_LOOK);
+}
+
+// move around in a somewhat random manner
+void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags)
+{
+  ticcmd_t *cmd = &bot->player->cmd;
+  sidesteppiness_t straightsteppy = (200 - sidesteppy / 2);
+
+  if (straightsteppy < 20)
+    straightsteppy = 20; // at least some, c'mon!
+
+  if (bot->stcounter == 0)
+  {
+    bot->stcounter = -10 - P_Random(pr_bot) / 40;
+    bot->stvalue ^= P_Random(pr_bot) & 0xF;
   }
+
+  else if (bot->stcounter == -1)
+  {
+    bot->stcounter = 7 + P_Random(pr_bot) / 120 + 8 * turn_density;
+    bot->stvalue ^= P_Random(pr_bot) & 1;
+  }
+
+  dboolean turn_anyway = P_Random(pr_bot) < 40 + 15 * turn_density;
+
+  if (turn_anyway)
+  {
+    if (!(moveflags & BMF_NOTURN))
+      cmd->angleturn += (bot->stvalue & 1 ? 1 : -1);
+  }
+
+  else if (bot->stcounter > 0)
+  {
+    if (!(moveflags & BMF_NOTURN))
+      cmd->angleturn += (bot->stvalue & 1 ? 2 : -2);
+  }
+
+  else
+    cmd->angleturn = 0;
+
+  if (bot->stcounter < -1)
+  {
+    if (bot->stvalue & 0xA)
+    {
+      int movement = bot->stvalue & 0xE >> 1;
+
+      if (movement & 4)
+      {
+        if (movement & 1)
+        {
+          if (!(moveflags & BMF_NOSIDES))
+            cmd->sidemove += sidesteppy / 40;
+        }
+
+        else
+        {
+          if (!(moveflags & BMF_NOSIDES))
+            cmd->sidemove -= sidesteppy / 40;
+        }
+      }
+
+      if (movement & 2 && !(moveflags & BMF_NOFORWARD))
+        cmd->forwardmove += straightsteppy / 32;
+
+      else if (!(moveflags & BMF_NOBACKWARD))
+        cmd->forwardmove -= straightsteppy / 32;
+    }
+
+    bot->stcounter += 2; // don't worry, it'll be decremented later in PRBotTic
+  }
+
+  else
+  {
+    cmd->sidemove = 0;
+    cmd->forwardmove = 0;
+  }
+}
+
+// force the bot to move and not just stare at things
+void D_PRBot_Move(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags)
+{
+  if (bot->stcounter >= 0)
+  {
+    bot->stcounter = -15 - bot->stcounter;
+  }
+
+  D_PRBot_Wander(bot, turn_density, sidesteppy, moveflags);
 }
 
 inline void D_PRBotTic_Look(mbot_t *bot)
 {
-  // todo: look around (call D_PRBot_NextState first, but not D_PRBot_LookFind)
   D_PRBot_NextState(bot);
+
+  if (bot->state == BST_LOOK)
+  {
+    ticcmd_t *cmd = &bot->player->cmd;
+
+    // no, nothing interesting yet
+    if (!(bot->gametics & 0x3) && bot->exploration > 0)
+      bot->exploration--;
+
 #ifdef BOTDEBUG
-  D_PRBot_PrintState(bot);
+    DEBUGPRINT("D_PRBotTic_Look: PRBot #%d has %d non-boredom points.\n", bot->playernum + 1, bot->exploration);
 #endif
+
+    if (bot->exploration > 60)
+    {
+      // turn around more
+      D_PRBot_Wander(bot, 3, SSTP_SOME, 0);
+
+      cmd->buttons &= ~BT_USE;
+    }
+
+    else if (bot->exploration > 40)
+    {
+      // turn around less, and use sometimes
+      D_PRBot_Wander(bot, 2, SSTP_MODERATE, 0);
+
+      if (!(cmd->buttons & BT_USE) && !(bot->gametics & 0x1F) && P_Random(pr_bot) < 60)
+        cmd->buttons |= BT_USE;
+
+      else
+        cmd->buttons &= ~BT_USE;
+    }
+
+    else if (bot->exploration > 20)
+    {
+      // turn around little, and use all the time
+      D_PRBot_Wander(bot, 1, SSTP_MODERATE, 0);
+
+      if (!(cmd->buttons & BT_USE) && !(bot->gametics & 0xF) && P_Random(pr_bot) < 128)
+        cmd->buttons |= BT_USE;
+
+      else
+        cmd->buttons &= ~BT_USE;
+    }
+
+    else
+    {
+      // turn around lots, and use and shoot compulsively
+      D_PRBot_Wander(bot, 4, SSTP_LITTLE, 0);
+
+      cmd->buttons &= ~(BT_USE | BT_ATTACK);
+
+      if (!(cmd->buttons & BT_USE) && !(bot->gametics & 0x7) && P_Random(pr_bot) < 128)
+        cmd->buttons |= BT_USE | (P_Random(pr_bot) < 30 ? BT_ATTACK : 0); // OOMPH OOMPH OOMPH BANG
+    }
+  }
 }
 
 inline void D_PRBotTic_Retreat(mbot_t *bot)
@@ -503,31 +687,76 @@ inline void D_PRBotTic_Retreat(mbot_t *bot)
     D_SetMObj(&bot->enemy, NULL);
 
     D_PRBot_NextState(bot);
-#ifdef BOTDEBUG
-    D_PRBot_PrintState(bot);
-#endif
   }
 
   // todo: movement part of retreating
 }
 
-inline void D_PRBotTic_Live(mbot_t *bot)
+void D_PRBot_Stumble(mbot_t *bot)
 {
-  // todo: live (stumbling and stuff)
+  ticcmd_t *cmd = &bot->player->cmd;
+
+  if (bot->gametics & 1)
+    cmd->sidemove -= P_Random(pr_bot) / 120;
+
+  else
+    cmd->sidemove += P_Random(pr_bot) / 120;
+
+  if (P_Random(pr_bot) < 180)
+  {
+    if (bot->gametics & 1)
+      cmd->sidemove -= P_Random(pr_bot) / 120;
+
+    else
+      cmd->sidemove += P_Random(pr_bot) / 120;
+  }
+}
+
+void D_PRBotTic_Live(mbot_t *bot)
+{
+  if (bot->mobj->floorz != bot->lastheight)
+  {
+    int diff1 = bot->lastheight - bot->mobj->floorz;
+    int diff2 = bot->mobj->floorz - bot->lastheight;
+    int absdiff = diff1 < diff2 ? diff1 : diff2;
+
+    bot->exploration += absdiff / 2;
+
+    // do some stumbling, unless still in mid-air
+    if (absdiff > 4 && bot->mobj->z - bot->mobj->floorz < 16 && (bot->mobj->z > bot->mobj->floorz || P_Random(pr_bot) < 55))
+    {
+      D_PRBot_Stumble(bot);
+    }
+  }
+
+  if (P_Random(pr_bot) < 80 && D_PRBot_AssessSectorDanger(bot))
+  {
+    D_PRBot_Stumble(bot);
+  }
+
+  bot->lastheight = bot->mobj->floorz;
 }
 
 inline void D_PRBotTic_Cautious(mbot_t *bot)
 {
   // todo: cautious
   D_PRBot_NextState(bot);
-#ifdef BOTDEBUG
-  D_PRBot_PrintState(bot);
-#endif
 }
 
 inline void D_PRBotTic_Leave(mbot_t *bot)
 {
-  // todo: leave sector
+  int absdiff = 0;
+
+  if (bot->mobj->floorz != bot->lastheight)
+  {
+    int diff1 = bot->lastheight - bot->mobj->floorz;
+    int diff2 = bot->mobj->floorz - bot->lastheight;
+    int absdiff = diff1 < diff2 ? diff1 : diff2;
+  }
+
+  // get outta there!
+  D_PRBot_Wander(bot, 3, SSTP_MORE, 0);
+  D_PRBot_NextState(bot);
 }
 
 void D_PRBotTic_Hunt(mbot_t *bot)
@@ -537,18 +766,24 @@ void D_PRBotTic_Hunt(mbot_t *bot)
     D_SetMObj(&bot->enemy, NULL);
 
     D_PRBot_NextState(bot);
-#ifdef BOTDEBUG
-    D_PRBot_PrintState(bot);
-#endif
   }
 
   else
   {
-    // todo: finish hunt code
+    int vis = P_IsVisible(bot->mobj, bot->enemy, false);
+
+    //D_PRBot_Move
+    if (vis)
+    {
+      D_PRBot_SetState(bot, BST_KILL);
+    }
+
+    else
+    {
+      D_PRBot_Move(bot, 2, (D_PRBot_LookToward(bot, bot->lastseenx, bot->lastseeny) ? SSTP_LITTLE : SSTP_SOME), BMF_NOTURN);
+    }
+
     D_PRBot_NextState(bot);
-#ifdef BOTDEBUG
-    D_PRBot_PrintState(bot);
-#endif
   }
 }
 
@@ -569,32 +804,30 @@ void D_PRBotTic_Kill(mbot_t *bot)
     bot->player->cmd.buttons &= ~BT_ATTACK;
 
     D_PRBot_NextState(bot);
-#ifdef BOTDEBUG
-    D_PRBot_PrintState(bot);
-#endif
   }
 
-  else if (!vis)
+  else if (!vis /* deathmatch implied because condition above failed */)
   {
-    // this is deathmatch, activate hunt mode!
     bot->player->cmd.buttons &= ~BT_ATTACK;
-    bot->state = BST_HUNT;
-#ifdef BOTDEBUG
-    D_PRBot_PrintState(bot);
-#endif
+    D_PRBot_SetState(bot, BST_HUNT);
   }
 
   else if (bot->enemy->health > bot->mobj->health * 2 && bot->enemy->target == bot->mobj)
   {
     bot->player->cmd.buttons &= ~BT_ATTACK;
-    bot->state = BST_RETREAT;
-#ifdef BOTDEBUG
-    D_PRBot_PrintState(bot);
-#endif
+    D_PRBot_SetState(bot, BST_RETREAT);
   }
 
-  else //if (D_PRBot_LookToward(bot, bot->enemy))
+  else if (D_PRBot_LookAt(bot, bot->enemy))
+  {
     bot->player->cmd.buttons |= BT_ATTACK;
+    D_PRBot_Move(bot, 2, SSTP_SOME, BMF_NOFORWARD | BMF_NOTURN);
+  }
+
+  else
+  {
+    D_PRBot_Move(bot, 2, SSTP_ALL, BMF_NOBACKWARD | BMF_NOTURN);
+  }
 
   // todo: add movement part of attacking
 }
@@ -673,7 +906,9 @@ void D_PRBotTic(mbot_t *bot)
     //-----^
   }
 
-  if (!netgame && bot->player && bot->state != BST_NONE)
+  bot->gametics++;
+
+  if (bot->player && bot->state != BST_NONE)
     G_BuildTiccmd(&netcmds[bot->playernum][maketic % BACKUPTICS]);
 }
 
@@ -689,7 +924,7 @@ void P_PRBot_CheckInits(void)
         D_PRBotDoInit(&bots[i]);
 
       else
-        I_Error("P_PRBot_CheckInits called prematurely: bot #%d player has no mobj set yet!", i);
+        I_Error("P_PRBot_CheckInits called prematurely: bot #%d player has no mobj set yet!", i + 1);
     }
   }
 }

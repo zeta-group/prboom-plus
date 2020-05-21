@@ -39,6 +39,7 @@
 #include "r_fps.h"
 #include "e6y.h"
 #include "s_advsound.h"
+#include "b_bot.h"
 
 int leveltime;
 
@@ -284,11 +285,14 @@ void P_Ticker (void)
   R_UpdateInterpolations ();
 
   P_MapStart();
+  
                // not if this is an intermission screen
-  if(gamestate==GS_LEVEL)
-  for (i=0; i<MAXPLAYERS; i++)
-    if (playeringame[i])
-      P_PlayerThink(&players[i]);
+  if(gamestate==GS_LEVEL) {
+    P_PRBot_Ticker();
+    for (i=0; i<MAXPLAYERS; i++)
+      if (playeringame[i])
+        P_PlayerThink(&players[i]);
+  }
 
   P_RunThinkers();
   P_UpdateSpecials();

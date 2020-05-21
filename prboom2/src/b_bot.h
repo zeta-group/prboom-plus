@@ -40,6 +40,25 @@
 
 
 
+// D_PRBot_Wander sidestepping factor
+typedef enum {
+  BMF_NOFORWARD   = 1,
+  BMF_NOBACKWARD  = 2,
+  BMF_NOSIDES     = 4,
+  BMF_NOTURN      = 8
+} botmoveflags_t;
+
+typedef enum {
+  SSTP_NONE     = 0,
+  SSTP_LITTLE   = 51,
+  SSTP_SOME     = 76,
+  SSTP_MODERATE = 102,
+  SSTP_MORE     = 153,
+  SSTP_LOTS     = 204,
+  SSTP_ALL      = 255,
+} sidesteppiness_t;
+
+// Current state of a bot's mind
 typedef enum {
   BST_NONE,       // no bot here!
   BST_PREINIT,    // waiting for mobj initialization
@@ -65,11 +84,15 @@ typedef struct {
   mobj_t *enemy;    // for monsters or other players
   mobj_t *want;     // for items
   mobj_t *avoid;    // for damaging things or dangerously big monsters
+  int lastheight;   // height changes make you slightly less boring. Staircases ahoy!
+  int movement;     // movement flags set by routines like D_PRBot_Wander
   int exploration;  // added to when enemies killed, secrets found, or special linedefs activated; decremented every 4 tics
+                    // (if too low, start shooting at linedefs with special != 0, and BST_LOOKing around more frantically)
 
   // state machine
   botstate_t state; // bot state
   int stcounter;    // counter for some states
+  int stvalue;      // value used by some states
 
   int lastseenx;
   int lastseeny;    // last seen coordinates of enemy (BST_HUNT)
@@ -77,16 +100,19 @@ typedef struct {
 
 mbot_t bots[MAXPLAYERS];
 
-void D_PRBot_DoReborn(mbot_t *bot);
-
 void D_PRBotClear(mbot_t *mbot);
 void D_PRBotCallInit(mbot_t *mbot, int playernum);
 void D_PRBotDeinit(mbot_t *mbot);
+static void D_PRBot_SetState(mbot_t *bot, botstate_t state);
 
-dboolean D_PRBot_LookToward(mbot_t *bot, mobj_t *lookee);
+mbot_t *D_PRBotReplace(int playernum);  // dawns a bot unto an exising player
+mbot_t *D_PRBotSpawn(void);             // spawns a bot to the game
 
-mbot_t *D_PRBotReplace(int playernum);
-mbot_t *D_PRBotSpawn(void); // spawns a bot to the game
+dboolean D_PRBot_LookToward(mbot_t *bot, int x, int y);
+dboolean D_PRBot_LookAt(mbot_t *bot, mobj_t *lookee);
+
+void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
+inline void D_PRBot_Move(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
 
 void D_PRBotTic_Live(mbot_t *bot);
 void D_PRBotTic_Look(mbot_t *bot);

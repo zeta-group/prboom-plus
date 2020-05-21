@@ -62,7 +62,7 @@
 #include "p_map.h"
 #include "p_checksum.h"
 #include "d_main.h"
-#include "d_bot.h"
+#include "b_bot.h"
 #include "wi_stuff.h"
 #include "hu_stuff.h"
 #include "st_stuff.h"
@@ -1096,7 +1096,7 @@ void G_Ticker (void)
     int buf = (gametic/ticdup)%BACKUPTICS;
 
     for (i=0 ; i<MAXPLAYERS ; i++) {
-      if (playeringame[i])
+      if (playeringame[i] && bots[i].state == BST_NONE)
         {
           ticcmd_t *cmd = &players[i].cmd;
 
@@ -1212,7 +1212,6 @@ void G_Ticker (void)
   switch (gamestate)
     {
     case GS_LEVEL:
-      P_PRBot_Ticker();
       P_Ticker ();
       P_WalkTicker();
       mlooky = 0;

@@ -58,6 +58,7 @@
 #include "m_bbox.h"                                         // phares 3/20/98
 #include "d_deh.h"
 #include "r_plane.h"
+#include "b_bot.h"
 #include "hu_stuff.h"
 #include "lprintf.h"
 #include "e6y.h"//e6y
@@ -1235,6 +1236,7 @@ dboolean PUREFUNC P_WasSecret(const sector_t *sec)
 void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing, dboolean bossaction)
 {
   int         ok;
+  int         i;
 
   //  Things that should never trigger lines
   //
@@ -1394,6 +1396,16 @@ void P_CrossSpecialLine(line_t *line, int side, mobj_t *thing, dboolean bossacti
 
   if (!P_CheckTag(line))  //jff 2/27/98 disallow zero tag on some types
     return;
+
+  // Increase bots' interest, as they have actually triggered some
+  // sort of line special
+
+  if (thing->player && thing->type == MT_PLAYER) {
+    for (i = 0; i < MAXPLAYERS; i++)
+      if (bots[i].state != BST_NONE && bots[i].mobj == thing) {
+        bots[i].exploration += 35; // Less bored!
+      }
+  }
 
   // Dispatch on the line special value to the line's action routine
   // If a once only function, and successful, clear the line special

@@ -37,7 +37,7 @@
 #include "p_inter.h"
 #include "p_tick.h"
 #include "m_cheat.h"
-#include "d_bot.h"
+#include "b_bot.h"
 #include "m_argv.h"
 #include "s_sound.h"
 #include "sounds.h"
