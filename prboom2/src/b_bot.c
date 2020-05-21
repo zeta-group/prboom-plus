@@ -546,7 +546,7 @@ void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, 
 
   if (bot->stcounter == 0)
   {
-    bot->stcounter = -10 - P_Random(pr_bot) / 32;
+    bot->stcounter = -10 - P_Random(pr_bot) / 80;
     bot->stvalue ^= P_Random(pr_bot) & 0xF;
   }
 
