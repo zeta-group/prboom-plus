@@ -18,13 +18,13 @@ before_build:
 
 after_build:
     # Package PRBoom+ output together
-    - '7z a prboom-plus-$(APPVEYOR_BUILD_VERSION).zip bin\$(configuration)\*.exe'
-    - '7z a prboom-plus-$(APPVEYOR_BUILD_VERSION).zip bin\$(configuration)\*.exe'
+    - '7z a "bin/prboom-plus-$(APPVEYOR_BUILD_VERSION).zip" "bin/$(configuration)/*.exe"'
+    - '7z a "bin/prboom-plus-$(APPVEYOR_BUILD_VERSION).zip" "bin/$(configuration)/*.exe"'
 
 artifacts:
-    - path: 
+    - path: bin/prboom-plus-$(APPVEYOR_BUILD_VERSION).zip
       name: 'PRBoom+'
       type: Zip
 
 build:
-  project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
+  project: $(APPVEYOR_BUILD_FOLDER)/$(APPVEYOR_PROJECT_NAME).sln
