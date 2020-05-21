@@ -53,22 +53,26 @@ typedef enum {
 } botstate_t;
 
 
+// A PRBot.
 typedef struct {
-  // the player the bot represents
-  // (NULL if no bot)
-  player_t *player;
-  mobj_t *mobj;
-  int playernum;
-  int lastseenx;
-  int lastseeny;
+  // basic elements
+  player_t *player; // player represented
+  mobj_t *mobj;     // player object
+  int playernum;    // self-explanatory
+  int gametics;     // tic counter
   
-  // bot AI
-  mobj_t *enemy; // for monsters or other players
-  mobj_t *want;  // for items
-  mobj_t *avoid; // for damaging things or dangerously big monsters
+  // AI
+  mobj_t *enemy;    // for monsters or other players
+  mobj_t *want;     // for items
+  mobj_t *avoid;    // for damaging things or dangerously big monsters
+  int exploration;  // added to when enemies killed, secrets found, or special linedefs activated; decremented every 4 tics
 
+  // state machine
   botstate_t state; // bot state
   int stcounter;    // counter for some states
+
+  int lastseenx;
+  int lastseeny;    // last seen coordinates of enemy (BST_HUNT)
 } mbot_t;
 
 mbot_t bots[MAXPLAYERS];
@@ -81,6 +85,7 @@ void D_PRBotDeinit(mbot_t *mbot);
 
 dboolean D_PRBot_LookToward(mbot_t *bot, mobj_t *lookee);
 
+mbot_t *D_PRBotReplace(int playernum);
 mbot_t *D_PRBotSpawn(void); // spawns a bot to the game
 
 void D_PRBotTic_Live(mbot_t *bot);

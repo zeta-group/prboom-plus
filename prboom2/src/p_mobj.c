@@ -35,9 +35,11 @@
 #include "doomstat.h"
 #include "m_random.h"
 #include "r_main.h"
+#include "d_bot.h"
 #include "p_maputl.h"
 #include "p_map.h"
 #include "p_tick.h"
+#include "d_main.h"
 #include "sounds.h"
 #include "st_stuff.h"
 #include "hu_stuff.h"
@@ -1200,6 +1202,10 @@ void P_SpawnPlayer (int n, const mapthing_t* mthing)
     HU_Start(); // wake up the heads up text
     }
     R_SmoothPlaying_Reset(p); // e6y
+  
+  // replace with bots if consoleplayer and -bot
+  if (n == consoleplayer && clbotparm)
+    D_PRBotReplace(consoleplayer);
 }
 
 /*

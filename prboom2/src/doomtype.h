@@ -143,6 +143,7 @@ typedef enum {
   prboom_6_compatibility,                /* Latest PrBoom */
   MAX_COMPATIBILITY_LEVEL,               /* Must be last entry */
   /* Aliases follow */
+  bot_compatibility  = prboom_6_compatibility, /* Earliest version with fully demo compatible bots */
   boom_compatibility = boom_201_compatibility, /* Alias used by G_Compatibility */
   best_compatibility = prboom_6_compatibility,
 } complevel_t_e;

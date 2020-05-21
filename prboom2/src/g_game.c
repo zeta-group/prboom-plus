@@ -455,7 +455,9 @@ void G_BuildTiccmd(ticcmd_t* cmd)
 
   G_SkipDemoCheck(); //e6y
 
-  if (democontinue)
+  // don't take game input if in demo playback
+  // mode or bot client mode
+  if (democontinue || clbotparm)
   {
     mousex = mousey = 0;
     return;
