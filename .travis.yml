@@ -25,10 +25,17 @@ addons:
 before_install:
     - sudo apt-get update
 
+jobs:
+    include:
+        - name: "Debug build"
+          env: "BUILDTYPE=Debug"
+        - name: "Release build"
+          env: "BUILDTYPE=Release"
+    
 script:
     - mkdir .build
     - cd .build
-    - CC=clang CXX=clang++ LD=clang++ cmake -G Ninja ../prboom2 && ninja
+    - CC=clang CXX=clang++ LD=clang++ cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILDTYPE ../prboom2 && ninja
 
 branches:
     only:
