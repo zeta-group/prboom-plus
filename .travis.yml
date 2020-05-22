@@ -18,7 +18,7 @@ addons:
          - libpcre2-dev
          - zlib1g-dev
          - libfluidsynth-dev
-         - libportsynth-dev
+         - libportmidi-dev
          - libgl-dev
 
 script:
