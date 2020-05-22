@@ -46,3 +46,7 @@ artifacts:
 
 build:
   project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
+
+branches:
+  only:
+    - appveyor
