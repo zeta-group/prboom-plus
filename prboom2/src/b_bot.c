@@ -479,8 +479,12 @@ static void D_PRBot_SetState(mbot_t *bot, botstate_t state)
 // Checks whether standing on damaging sector
 dboolean D_PRBot_AssessSectorDanger(mbot_t *bot)
 {
-  if (bot->mobj->z > bot->mobj->floorz)
+  assert(bot->mobj && "D_PRBot_AssessSectorDanger called on bot with mobj not set!");
+
+  if (bot->mobj->z > bot->mobj->floorz || !bot->mobj->subsector)
     return false; // no mid-air damage
+
+  assert(bot->mobj && "D_PRBot_AssessSectorDanger called on bot whose mobj->subsector has a broken sector reference!");
 
   sector_t *sector = bot->mobj->subsector->sector;
 
