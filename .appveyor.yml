@@ -7,8 +7,6 @@ environment:
           MSVC_VER: 14 2015
         - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
           MSVC_VER: 15 2017
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-          MSVC_VER: 16 2019
 
 platform:
   - x64
@@ -46,6 +44,19 @@ artifacts:
 
 build:
   project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
+
+deploy:
+    release: prboom-plus-win64-$(appveyor_build_version).zip
+    description: '64-bit Windows build from AppVeyor.'
+    provider: GitHub
+    auth_token:
+        secure: 8I+6+9VLJXaYWNCFmUJeF2oZazopqYMJxlmc07fbUXC207BpUdjhBZGI5G0gGWUM
+    draft: false
+    prerelease: false
+    on:
+        branch: appveyor
+        APPVEYOR_REPO_TAG: true
+    artifact: prboom-plus-$(APPVEYOR_BUILD_VERSION).zip
 
 branches:
   only:
