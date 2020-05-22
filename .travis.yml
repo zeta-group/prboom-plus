@@ -21,8 +21,15 @@ addons:
          - libportmidi-dev
          - libgl-dev
 
+before_install:
+    - sudo apt-get update
+
 script:
-    - cmake 
+    - mkdir .build
+    - cd .build
+    - cmake -G Ninja ../prboom2
+    - ninja
+    
 
 branches:
     only:
