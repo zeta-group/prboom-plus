@@ -1,6 +1,13 @@
 version: '2.7.1.7br{build}'
 
-image: Visual Studio 2017
+image:
+    - Visual Studio 2017
+    - Visual Studio 2015
+
+environment:
+    matrix:
+    - MSVC_VER: 2017
+    - MSVC_VER: 2015
 
 platform:
   - x64
@@ -23,7 +30,7 @@ before_build:
     - 'vcpkg install opengl:%PLATFORM%-windows'
         
     # Setup CMake
-    - 'cmake -G "Visual Studio 15 2017 Win64" -S ./prboom2 "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
+    - 'cmake -G "Visual Studio 15 %MSVC_VER% Win64" -S ./prboom2 "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
 
 after_build:
     # Package PRBoom+ output together
