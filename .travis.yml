@@ -7,9 +7,23 @@ compiler:
 os:
     - linux
 
-before_install:
-    - sudo apt-get update
-    - sudo apt-get install libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportsynth-dev libgl-dev # woah
+addons:
+    apt:
+        packages:
+         - libsdl2-dev
+         - libsdl2-image-dev
+         - libsdl2-net-dev
+         - libsdl2-mixer-dev
+         - libvorbis-dev
+         - libpcre2-dev
+         - zlib1g-dev
+         - libfluidsynth-dev
+         - libportsynth-dev
+         - libgl-dev
 
 script:
-    - 
+    - cmake 
+
+branches:
+    only:
+    - appveyor
