@@ -832,6 +832,12 @@ static void G_DoLoadLevel (void)
       memset (players[i].frags,0,sizeof(players[i].frags));
     }
 
+  // 5/21/20 add bots automatically on join
+  for (i = M_CheckParm ("-addbots"); i; i--)
+  {  // (5/21/20)
+    D_PRBotSpawn();
+  }
+
   // initialize the msecnode_t freelist.                     phares 3/25/98
   // any nodes in the freelist are gone by now, cleared
   // by Z_FreeTags() when the previous level ended or player
