@@ -1076,7 +1076,7 @@ static int G_ReadDemoFooter(const char *filename)
 
       doom_snprintf(demoex_filename, sizeof(demoex_filename), template_format, tmp_path);
 
-#ifdef MSVC
+#ifdef _WIN32
       _mktemp_s(demoex_filename, 40);
 #else
       mkstemp(demoex_filename);
