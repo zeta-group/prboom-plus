@@ -20,6 +20,7 @@ addons:
          - libfluidsynth-dev
          - libportmidi-dev
          - libgl-dev
+         - ninja-build
 
 before_install:
     - sudo apt-get update
@@ -29,7 +30,6 @@ script:
     - cd .build
     - cmake -G Ninja ../prboom2
     - ninja
-    
 
 branches:
     only:
