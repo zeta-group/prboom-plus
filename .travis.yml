@@ -1,5 +1,5 @@
 ---
-language: c++
+language: cpp
 dist: bionic
 
 compiler:
@@ -41,9 +41,10 @@ script:
 
 deploy:
  -  provider: releases
-    api_key:
+    token:
         secure: 'e3/XdP/tKtLA1G6b07KsFlPYyvC6If7K4yRecJ8KRShMPXVIvG62TxpmqqOrRlz3QlZH2lwecwnf4t/OAo3jZ9pYK7PqCudOPPWfVvTw/CMdoxSiboC7Pas7MsMR5kp9HtYCL2NWssBPfxID/puMyloa9Irm/77n5mMCO+KYIQOOJGj/3rGlAU02CF07AJ1/FN5Cw1g8wWjNXF2UapyKiPEOav1A7QK2yc8/Kl9tBzjnK++HbicA+Bb7ekOkL2bbYPlyiVIzWJtU17ad9LB3sFqquIVqFSmvNh8F+FZD25RgdUu5pb6c+h+Z9baUVt0dOlboU9Wo65bJO8NEY0j1izVRJOPBKVSqkPJ2h+VdfKorminJ+zR7TxdRPfdQbpxsrYz4q7p7uPKYrVDfGyeJQr6N8VprI9jsTviQYX5hpgGFfqQk4mKAu7fo1kbe057wt4eKOcbS9zezuoAz6L0ygNKv7LWwXhd6am4TGGSrGnsGMiuTCMJiPqu/ObW36m/UF1gIvRvxULLJb/O+SVKSjyjWsLndFsJ5BGqFt4pLXoO6+OO2JxYhcrVQhEuiR/Sj+gabnJxFj8iuGUXlicFtnWccrt1hnotv0Jc0SHAjDy13+8bqOW78YJq6sd9PWn4ylE3NFbFUVf8Jy03WqaJBnev+l/ATAYGH18GCRD8NGdw='
-    skip_cleanup: true
+    cleanup: true
+    edge: true
     on:
         tags: true
     file:
