@@ -140,7 +140,7 @@ static void D_PRBotDoInit(mbot_t *mbot)
   D_PRBotClear(mbot); // call a 2nd time to change BST_PREINIT to BST_LOOK
 
   mbot->mobj = players[mbot->playernum].mo;
-  mbot->mobj->flags |= MF_FRIEND;
+  if (!deathmatch) mbot->mobj->flags |= MF_FRIEND; // happy little coop friends
 
   // spawn teleport fog and make its noise thing
   S_StartSound(P_SpawnMobj(mbot->mobj->x, mbot->mobj->y, mbot->mobj->z, MT_TFOG), sfx_telept);
@@ -283,7 +283,7 @@ static dboolean PIT_FindBotTarget(mobj_t *mo)
   // Move the selected monster to the end of its associated
   // list, so that it gets searched last next time.
   {
-    thinker_t *cap = &thinkerclasscap[mo->flags & MF_FRIEND ? th_friends : th_enemies];
+    thinker_t *cap = &thinkerclasscap[(deathmatch || mo->flags & MF_FRIEND) ? th_enemies : th_friends];
     (mo->thinker.cprev->cnext = mo->thinker.cnext)->cprev = mo->thinker.cprev;
     (mo->thinker.cprev = cap->cprev)->cnext = &mo->thinker;
     (mo->thinker.cnext = cap)->cprev = &mo->thinker;
@@ -297,7 +297,7 @@ static dboolean D_PRBot_LookFind(mbot_t *bot)
   mobj_t *actor = bot->mobj;
 
   thinker_t *th;
-  thinker_t *cap = &thinkerclasscap[deathmatch ? th_friends : th_enemies];
+  thinker_t *cap = &thinkerclasscap[th_friends | th_enemies];
 
   // Search for new enemy
   if (cap->cnext != cap) // Empty list? bail out early
