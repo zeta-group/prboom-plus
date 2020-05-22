@@ -27,9 +27,9 @@ before_build:
 
 after_build:
     # Package PRBoom+ output together
-    - '7z a "prboom-plus-$(APPVEYOR_BUILD_VERSION).zip" "%CONFIGURATION%/*.exe"'
-    - '7z a "prboom-plus-$(APPVEYOR_BUILD_VERSION).zip" "%CONFIGURATION%/*.wad"'
-    - '7z a "prboom-plus-$(APPVEYOR_BUILD_VERSION).zip" "%CONFIGURATION%/*.dll"'
+    - '7z a "prboom-plus-%APPVEYOR_BUILD_VERSION%.zip" "%CONFIGURATION%/*.exe"'
+    - '7z a "prboom-plus-%APPVEYOR_BUILD_VERSION%.zip" "%CONFIGURATION%/*.wad"'
+    - '7z a "prboom-plus-%APPVEYOR_BUILD_VERSION%.zip" "%CONFIGURATION%/*.dll"'
 
 artifacts:
     - path: prboom-plus-$(APPVEYOR_BUILD_VERSION).zip
