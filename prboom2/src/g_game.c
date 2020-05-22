@@ -833,9 +833,17 @@ static void G_DoLoadLevel (void)
     }
 
   // 5/21/20 add bots automatically on join
-  for (i = M_CheckParm ("-addbots"); i; i--)
-  {  // (5/21/20)
-    D_PRBotSpawn();
+  i = M_CheckParm("-addbots");
+  
+  if (i + 1 < myargc)
+  {
+    i = atoi(myargv[i + 1]);
+    if (i > 4) i = 4;
+    
+    for (; i>0; i--)
+    {  // (5/21/20)
+      D_PRBotSpawn();
+    }
   }
 
   // initialize the msecnode_t freelist.                     phares 3/25/98
