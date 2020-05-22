@@ -938,7 +938,6 @@ void P_PRBot_Ticker(void)
       assert(bots[i].mobj && "Mobj unset in ticked bot!");
 
       D_PRBotTic(&bots[i]);
-      break;
     }
   }
 }
