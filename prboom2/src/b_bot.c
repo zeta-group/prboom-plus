@@ -269,7 +269,7 @@ static dboolean PIT_FindBotTarget(mobj_t *mo)
 
   if (!(
           (
-              (mo->flags & MF_FRIEND ^ actor->flags & MF_FRIEND && mo->type != MT_PLAYER) ||
+              ((mo->flags & MF_FRIEND) ^ (actor->flags & MF_FRIEND) && mo->type != MT_PLAYER) ||
               (deathmatch && mo->type == MT_PLAYER)) &&
           mo->health > 0 &&
           (mo->flags & MF_COUNTKILL || mo->type == MT_SKULL || mo->type == MT_PLAYER)))
