@@ -1,13 +1,13 @@
 version: '2.7.1.7br{build}'
 
 image:
-    - Visual Studio 2017
     - Visual Studio 2015
+    - Visual Studio 2017
 
 environment:
     matrix:
-    - MSVC_VER: 2017
     - MSVC_VER: 2015
+    - MSVC_VER: 2017
 
 platform:
   - x64
