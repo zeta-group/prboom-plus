@@ -132,7 +132,7 @@ extern int SCREEN_320x200;
 
 // The maximum number of players, multiplayer/networking.
 extern dboolean clsolonet; // import from d_main.h
-#define MAXPLAYERS       16
+#define MAXPLAYERS       4
 
 // phares 5/14/98:
 // DOOM Editor Numbers (aka doomednum in mobj_t)
