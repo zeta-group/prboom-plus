@@ -173,7 +173,7 @@ mbot_t *D_PRBotReplace(int playernum)
 
 void D_PRBotDeinit(mbot_t *mbot)
 {
-  BOTDEBUG("D_PRBotDeinit: Removed bot #%d from the game.\n", mbot->playernum + 1);
+  DEBUGPRINT("D_PRBotDeinit: Removed bot #%d from the game.\n", mbot->playernum + 1);
 
   playeringame[mbot->playernum] = false;
 
@@ -456,7 +456,7 @@ static void D_PRBot_PrintState(mbot_t *bot)
     break;
   }
 
-  BOTDEBUG("D_PRBot_NextState: bot #%d is in state %s\n", bot->playernum + 1, st);
+  DEBUGPRINT("D_PRBot_NextState: bot #%d is in state %s\n", bot->playernum + 1, st);
 }
 
 static void D_PRBot_SetState(mbot_t *bot, botstate_t state)
