@@ -39,6 +39,7 @@
 #include "m_cheat.h"
 #include "b_bot.h"
 #include "m_argv.h"
+#include "d_main.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "dstrings.h"
@@ -707,8 +708,11 @@ static int M_FindCheats_Boom(int key)
 
   for (matchedbefore = ret = i = 0; cheat[i].cheat; i++)
     if ((sr & cheat[i].mask) == cheat[i].code &&      // if match found
-        !(cheat[i].when & not_dm   && deathmatch) &&  // and if cheat allowed
-        !(cheat[i].when & not_coop && netgame && !deathmatch) &&
+        // and if cheat allowed
+        (clsolonet || ( /* -solo-net overrides not_net & friends */
+            !(cheat[i].when & not_dm   && deathmatch) &&
+            !(cheat[i].when & not_coop && netgame && !deathmatch)
+        )) &&
         !(cheat[i].when & not_demo && (demorecording || demoplayback)) &&
         !(cheat[i].when & not_menu && menuactive) &&
         !(cheat[i].when & not_deh  && M_CheckParm("-deh"))) {
@@ -748,7 +752,9 @@ static int M_FindCheats_Doom(int key)
   for (cht = cheat; cht->cheat; cht++)
   {
     if (!(cht->when & not_dm   && deathmatch) &&  // and if cheat allowed
-        !(cht->when & not_coop && netgame && !deathmatch) &&
+        (clsolonet || ( /* -solo-net overrides not_net */
+            !(cht->when & not_coop && netgame && !deathmatch)
+        )) &&
         !(cht->when & not_demo && (demorecording || demoplayback)) &&
         !(cht->when & not_menu && menuactive) &&
         !(cht->when & not_deh  && M_CheckParm("-deh")))

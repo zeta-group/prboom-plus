@@ -51,7 +51,9 @@ extern dboolean clnomonsters; // checkparm of -nomonsters
 extern dboolean clrespawnparm;  // checkparm of -respawn
 extern dboolean clfastparm; // checkparm of -fast
 extern dboolean clbotparm; // checkparm of -bot (5/19/20)
+extern dboolean clsolonet; // checkparm of -solo-net (5/21/20)
 //jff end of external declaration of command line playmode
+
 
 extern dboolean nosfxparm;
 extern dboolean nomusicparm;

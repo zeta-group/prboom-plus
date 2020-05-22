@@ -109,12 +109,14 @@ dboolean clnomonsters;   // checkparm of -nomonsters
 dboolean clrespawnparm;  // checkparm of -respawn
 dboolean clfastparm;     // checkparm of -fast
 dboolean clbotparm;      // checkparm of -bot; activates the PRBot (5/19/20)
+dboolean clsolonet;      // checkparm of -solo-net (5/21/20)
 // jff 1/24/98 end definition of command line version of play mode switches
 
 dboolean nomonsters;     // working -nomonsters
 dboolean respawnparm;    // working -respawn
 dboolean fastparm;       // working -fast
-dboolean botparm;      // working -bot
+dboolean botparm;        // working -bot
+dboolean solonet;        // working -solo-net
 
 dboolean singletics = false; // debug flag to cancel adaptiveness
 
@@ -1425,7 +1427,8 @@ static void D_DoomMainSetup(void)
   nomonsters = clnomonsters = M_CheckParm ("-nomonsters");
   respawnparm = clrespawnparm = M_CheckParm ("-respawn");
   fastparm = clfastparm = M_CheckParm ("-fast");
-  botparm = clbotparm = M_CheckParm ("-bot"); // (5/19/20)
+  botparm = clbotparm = M_CheckParm ("-bot");       // (5/19/20)
+  solonet = clsolonet = M_CheckParm ("-solo-net");  // (5/21/20)
 
   // jff 1/24/98 end of set to both working and command line value
 
