@@ -28,8 +28,7 @@ before_install:
 script:
     - mkdir .build
     - cd .build
-    - cmake -G Ninja ../prboom2
-    - ninja
+    - CC=clang CXX=clang++ LD=clang++ cmake -G Ninja ../prboom2 && ninja
 
 branches:
     only:
