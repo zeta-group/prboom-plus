@@ -60,7 +60,7 @@ build_script:
 
   - sh:  '( cd ${CONFIGURATION} && ninja )'
 
-build: off
+build: Script
   #project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
 
 artifacts:
