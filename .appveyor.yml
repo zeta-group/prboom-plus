@@ -3,10 +3,12 @@ version: '2.5.1.7br{build}'
 
 environment:
     matrix:
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-          MSVC_VER: 14 2015
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-          MSVC_VER: 15 2017
+      - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+        GENERATOR: Visual Studio 14 2015 Win64
+      - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+        GENERATOR: Visual Studio 15 2017 Win64
+      - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+        GENERATOR: Ninja
 
 platform:
   - x64
@@ -17,46 +19,83 @@ configuration:
 
 before_build:
     # Install libraries
-    - 'vcpkg install sdl2:%PLATFORM%-windows'
-    - 'vcpkg install sdl2-net:%PLATFORM%-windows'
-    - 'vcpkg install sdl2-mixer:%PLATFORM%-windows'
-    - 'vcpkg install sdl2-image:%PLATFORM%-windows'
-    - 'vcpkg install pcre:%PLATFORM%-windows'
-    - 'vcpkg install zlib:%PLATFORM%-windows'
-    - 'vcpkg install libvorbis:%PLATFORM%-windows'
-    - 'vcpkg install fluidsynth:%PLATFORM%-windows'
-    - 'vcpkg install portmidi:%PLATFORM%-windows'
-    - 'vcpkg install opengl:%PLATFORM%-windows'
-        
+  - cmd: 'vcpkg install sdl2:%PLATFORM%-windows'
+  - cmd: 'vcpkg install sdl2-net:%PLATFORM%-windows'
+  - cmd: 'vcpkg install sdl2-mixer:%PLATFORM%-windows'
+  - cmd: 'vcpkg install sdl2-image:%PLATFORM%-windows'
+  - cmd: 'vcpkg install pcre:%PLATFORM%-windows'
+  - cmd: 'vcpkg install zlib:%PLATFORM%-windows'
+  - cmd: 'vcpkg install libvorbis:%PLATFORM%-windows'
+  - cmd: 'vcpkg install fluidsynth:%PLATFORM%-windows'
+  - cmd: 'vcpkg install portmidi:%PLATFORM%-windows'
+  - cmd: 'vcpkg install opengl:%PLATFORM%-windows'
+
+  - sh:  'sudo apt update'
+  - sh:  'sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfuidsynth-dev libportmidi-dev libgl-dev\
+  
+         ninja-build zstd' # Build dependencies
+    
     # Setup CMake
-    - 'cmake -G "Visual Studio %MSVC_VER% Win64" -S ./prboom2 "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
+  - cmd: 'cmake -G "%GENERATOR%" -S ./prboom2 "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
+
+  - sh:  'export CC=clang CXX=clang++ LD=clang++'                 # compiler choices
+  - sh:  'export CFLAGS="-O2" CXXFLAGS="-O2 -stdlib=libstdc++"'   # build options
+  - sh:  '[ -d "${CONFIGURATION}" ] || mkdir -v "${CONFIGURATION}"' # ensure build folder
+  - sh:  'cmake -G "$GENERATOR" -S ./prboom2 -B "${CONFIGURATION}" -DDEBUG_LIBNAME_SUFFIX=""'
 
 after_build:
     # Package PRBoom+ output together
-    - '7z a "prboom-plus-%APPVEYOR_BUILD_VERSION%.zip" "./%CONFIGURATION%/*.exe"'
-    - '7z a "prboom-plus-%APPVEYOR_BUILD_VERSION%.zip" "./%CONFIGURATION%/*.wad"'
-    - '7z a "prboom-plus-%APPVEYOR_BUILD_VERSION%.zip" "./%CONFIGURATION%/*.dll"'
+    # - zip under Windows
+  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./${CONFIGURATION}/*.exe"'
+  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./${CONFIGURATION}/*.wad"'
+  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}s.zip" "./${CONFIGURATION}/*.dll"'
+
+    # - zip, tar.bz2, tar.
+  - sh: >- # zip distribution
+        zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
+        "./${CONFIGURATION}/"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}'
+
+build_script:
+  - cmd: 'msbuild "$(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln" msbuild /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
+
+  - sh:  '( cd ${CONFIGURATION} && ninja )'
+
+build: off
+  #project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
 
 artifacts:
-    - path: prboom-plus-$(APPVEYOR_BUILD_VERSION).zip
-      name: 'PRBoom+'
-      type: Zip
-
-build:
-  project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
+     - path: prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip
+       name: 'PRBoom+ Windows 64-bit build (MSVC)'
+       type: Zip
+       
+     - path: prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip
+       name: 'PRBoom+ Linux 64-bit build (clang)'
+       type: Zip
 
 deploy:
-    release: prboom-plus-win64-$(appveyor_build_version).zip
-    description: '64-bit Windows build from AppVeyor.'
+  - release: PRBoom+ v$(appveyor_build_version
+    description: '64-bit Windows and Linux builds from AppVeyor.'
+    
     provider: GitHub
-    auth_token:
-        secure: 8I+6+9VLJXaYWNCFmUJeF2oZazopqYMJxlmc07fbUXC207BpUdjhBZGI5G0gGWUM
     draft: false
     prerelease: false
+     
+    artifact: /.*\.(zip|tar.bz2|zst)/
+    
+    auth_token:
+        secure: 8I+6+9VLJXaYWNCFmUJeF2oZazopqYMJxlmc07fbUXC207BpUdjhBZGI5G0gGWUM
+        
     on:
         branch: appveyor
         APPVEYOR_REPO_TAG: true
-    artifact: prboom-plus-$(APPVEYOR_BUILD_VERSION).zip
+
+  - provider: FTP
+    protocol: ftps
+    host: '2804:14d:4cd8:8380::2' # Gustavo6046 ipv6 (fallback to 2a07:1c44:39f3:10::)
+    username: pub
+    password: lic # 'public'
+    folder: build/prboom-plus-prbot/$(appveyor_build_version)
+    artifact: /.*\.(zip|tar.bz2|zst)/
 
 branches:
   only:
