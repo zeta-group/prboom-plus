@@ -56,7 +56,7 @@ after_build:
         "./${CONFIGURATION}/"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}'
 
 build_script:
-  - cmd: 'msbuild "$(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln" msbuild /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
+  - cmd: 'msbuild "$(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
 
   - sh:  '( cd ${CONFIGURATION} && ninja )'
 
