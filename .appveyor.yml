@@ -101,14 +101,6 @@ deploy:
         branch: appveyor
         APPVEYOR_REPO_TAG: true
 
-  - provider: FTP
-    protocol: ftp
-    host: 'gus6046.strangled.net' # AAAA to Gustavo6046 ipv6 via tinc
-    username: pub
-    password: lic # 'public'
-    folder: build/prboom-plus-prbot/$(appveyor_build_version)
-    artifact: /.*\.(zip|tar.bz2|zst)/
-
 branches:
   only:
     - appveyor
