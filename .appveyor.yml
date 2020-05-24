@@ -64,7 +64,7 @@ after_build:
 
   - sh:
       zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
-      "./${CONFIGURATION}/"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}
+      "./"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}
 
 build_script:
   - cmd: 'msbuild "PrBoom-Plus.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
