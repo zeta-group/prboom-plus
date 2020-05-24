@@ -69,7 +69,7 @@ after_build:
 build_script:
   - cmd: 'msbuild "PrBoom-Plus.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
 
-  - sh:  '( cd ${CONFIGURATION} && ninja )'
+  - sh:  'ninja'
 
 build: Script
   #project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
