@@ -5,12 +5,12 @@ environment:
     matrix:
       - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
         GENERATOR: Ninja
-        DEPS: >-
+        DEPS:
           libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
           ninja-build zstd
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
-        DEPS: >-
+        DEPS:
           sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
           sdl2-mixer:$(PLATFORM)-windows
@@ -37,7 +37,7 @@ environment:
 
 platform:
   - x64
- 
+
 configuration:
   - Debug
   - Release
@@ -48,7 +48,7 @@ before_build:
 
   - sh:  'sudo apt-get -y update'
   - sh:  'sudo apt-get -y install $DEPS'
-    
+
     # Setup CMake
   - cmd: 'cmake -G "%GENERATOR%" -S ./prboom2 -B "${CONFIGURATION}" "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
 
@@ -63,7 +63,7 @@ after_build:
   - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./${CONFIGURATION}/*.wad"'
   - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}s.zip" "./${CONFIGURATION}/*.dll"'
 
-  - sh: >-
+  - sh:
       zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
       "./${CONFIGURATION}/"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}
 
@@ -79,7 +79,7 @@ artifacts:
      - path: prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip
        name: 'PRBoom+ Windows 64-bit build (MSVC)'
        type: Zip
-       
+
      - path: prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip
        name: 'PRBoom+ Linux 64-bit build (clang)'
        type: Zip
@@ -87,16 +87,16 @@ artifacts:
 deploy:
   - release: PRBoom+ v$(appveyor_build_version
     description: '64-bit Windows and Linux builds from AppVeyor.'
-    
+
     provider: GitHub
     draft: false
     prerelease: false
-     
+
     artifact: /.*\.(zip|tar.bz2|zst)/
-    
+
     auth_token:
         secure: 8I+6+9VLJXaYWNCFmUJeF2oZazopqYMJxlmc07fbUXC207BpUdjhBZGI5G0gGWUM
-        
+
     on:
         branch: appveyor
         APPVEYOR_REPO_TAG: true
