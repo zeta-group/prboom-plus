@@ -5,10 +5,35 @@ environment:
     matrix:
       - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
         GENERATOR: Ninja
+        DEPS: >-
+          libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
+          ninja-build zstd
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
+        DEPS: >-
+          sdl2:$(PLATFORM)-windows
+          sdl2-net:$(PLATFORM)-windows
+          sdl2-mixer:$(PLATFORM)-windows
+          sdl2-image:$(PLATFORM)-windows
+          pcre:$(PLATFORM)-windows
+          zlib:$(PLATFORM)-windows
+          libvorbis:$(PLATFORM)-windows
+          fluidsynth:$(PLATFORM)-windows
+          portmidi:$(PLATFORM)-windows
+          opengl:$(PLATFORM)-windows
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
         GENERATOR: Visual Studio 15 2017 Win64
+        DEPS: >-
+          sdl2:$(PLATFORM)-windows
+          sdl2-net:$(PLATFORM)-windows
+          sdl2-mixer:$(PLATFORM)-windows
+          sdl2-image:$(PLATFORM)-windows
+          pcre:$(PLATFORM)-windows
+          zlib:$(PLATFORM)-windows
+          libvorbis:$(PLATFORM)-windows
+          fluidsynth:$(PLATFORM)-windows
+          portmidi:$(PLATFORM)-windows
+          opengl:$(PLATFORM)-windows
 
 platform:
   - x64
@@ -19,21 +44,10 @@ configuration:
 
 before_build:
     # Install libraries
-  - cmd: 'vcpkg install sdl2:%PLATFORM%-windows'
-  - cmd: 'vcpkg install sdl2-net:%PLATFORM%-windows'
-  - cmd: 'vcpkg install sdl2-mixer:%PLATFORM%-windows'
-  - cmd: 'vcpkg install sdl2-image:%PLATFORM%-windows'
-  - cmd: 'vcpkg install pcre:%PLATFORM%-windows'
-  - cmd: 'vcpkg install zlib:%PLATFORM%-windows'
-  - cmd: 'vcpkg install libvorbis:%PLATFORM%-windows'
-  - cmd: 'vcpkg install fluidsynth:%PLATFORM%-windows'
-  - cmd: 'vcpkg install portmidi:%PLATFORM%-windows'
-  - cmd: 'vcpkg install opengl:%PLATFORM%-windows'
+  - cmd: 'vcpkg install %DEPS%'
 
   - sh:  'sudo apt-get -y update'
-  - sh:  'sudo apt-get -y install libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev \
-  
-         ninja-build zstd' # Build dependencies
+  - sh:  'sudo apt-get -y install $DEPS'
     
     # Setup CMake
   - cmd: 'cmake -G "%GENERATOR%" -S ./prboom2 -B "${CONFIGURATION}" "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
