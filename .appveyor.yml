@@ -36,7 +36,7 @@ before_build:
          ninja-build zstd' # Build dependencies
     
     # Setup CMake
-  - cmd: 'cmake -G "%GENERATOR%" -S ./prboom2 "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
+  - cmd: 'cmake -G "%GENERATOR%" -S ./prboom2 -B "${CONFIGURATION}" "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
 
   - sh:  'export CC=clang CXX=clang++ LD=clang++'                 # compiler choices
   - sh:  'export CFLAGS="-O2" CXXFLAGS="-O2 -stdlib=libstdc++"'   # build options
