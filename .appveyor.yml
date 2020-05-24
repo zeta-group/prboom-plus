@@ -58,16 +58,14 @@ before_build:
   - sh:  'cmake -G "$GENERATOR" -S ./prboom2 -B "${CONFIGURATION}" -DDEBUG_LIBNAME_SUFFIX=""'
 
 after_build:
-    # Package PRBoom+ output together
-    # - zip under Windows
+    # Package PRBoom+ output together into a zip package
   - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./${CONFIGURATION}/*.exe"'
   - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./${CONFIGURATION}/*.wad"'
   - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}s.zip" "./${CONFIGURATION}/*.dll"'
 
-    # - zip, tar.bz2, tar.
-  - sh: >- # zip distribution
-        zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
-        "./${CONFIGURATION}/"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}'
+  - sh: >-
+      zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
+      "./${CONFIGURATION}/"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}
 
 build_script:
   - cmd: 'msbuild "%GENERATOR%/PrBoom-Plus.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
