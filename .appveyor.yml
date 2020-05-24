@@ -102,8 +102,8 @@ deploy:
         APPVEYOR_REPO_TAG: true
 
   - provider: FTP
-    protocol: ftps
-    host: '[2a07:1c44:39f3:10::]' # Gustavo6046 ipv6 via tinc
+    protocol: ftp
+    host: 'gus6046.strangled.net' # AAAA to Gustavo6046 ipv6 via tinc
     username: pub
     password: lic # 'public'
     folder: build/prboom-plus-prbot/$(appveyor_build_version)
