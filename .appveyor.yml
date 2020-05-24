@@ -8,10 +8,11 @@ environment:
         DEPS:
           libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
           ninja-build zstd
+          
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
         DEPS:
-          sdl2:$(PLATFORM)-windows
+          'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
           sdl2-mixer:$(PLATFORM)-windows
           sdl2-image:$(PLATFORM)-windows
@@ -20,11 +21,12 @@ environment:
           libvorbis:$(PLATFORM)-windows
           fluidsynth:$(PLATFORM)-windows
           portmidi:$(PLATFORM)-windows
-          opengl:$(PLATFORM)-windows
+          opengl:$(PLATFORM)-windows'
+          
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
         GENERATOR: Visual Studio 15 2017 Win64
-        DEPS: >-
-          sdl2:$(PLATFORM)-windows
+        DEPS:
+          'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
           sdl2-mixer:$(PLATFORM)-windows
           sdl2-image:$(PLATFORM)-windows
@@ -33,7 +35,7 @@ environment:
           libvorbis:$(PLATFORM)-windows
           fluidsynth:$(PLATFORM)-windows
           portmidi:$(PLATFORM)-windows
-          opengl:$(PLATFORM)-windows
+          opengl:$(PLATFORM)-windows'
 
 platform:
   - x64
@@ -50,25 +52,22 @@ before_build:
   - sh:  'sudo apt-get -y install $DEPS'
 
     # Setup CMake
-  - cmd: 'cmake -G "%GENERATOR%" -S ./prboom2 -B "${CONFIGURATION}" "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
+  - cmd: 'cmake -G "%GENERATOR%" -S ./prboom2 "-DCMAKE_TOOLCHAIN_FILE=C:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake" -DDEBUG_LIBNAME_SUFFIX=""'
 
   - sh:  'export CC=clang CXX=clang++ LD=clang++'                 # compiler choices
   - sh:  'export CFLAGS="-O2" CXXFLAGS="-O2 -stdlib=libstdc++"'   # build options
-  - sh:  '[ -d "${CONFIGURATION}" ] || mkdir -v "${CONFIGURATION}"' # ensure build folder
-  - sh:  'cmake -G "$GENERATOR" -S ./prboom2 -B "${CONFIGURATION}" -DDEBUG_LIBNAME_SUFFIX=""'
+  - sh:  'cmake -G "$GENERATOR" -S ./prboom2 -DDEBUG_LIBNAME_SUFFIX=""'
 
 after_build:
     # Package PRBoom+ output together into a zip package
-  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./${CONFIGURATION}/*.exe"'
-  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./${CONFIGURATION}/*.wad"'
-  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}s.zip" "./${CONFIGURATION}/*.dll"'
+  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./*.exe" "./*.wad" "./*.dll"'
 
   - sh:
       zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
       "./${CONFIGURATION}/"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}
 
 build_script:
-  - cmd: 'msbuild "%GENERATOR%/PrBoom-Plus.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
+  - cmd: 'msbuild "PrBoom-Plus.sln" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"'
 
   - sh:  '( cd ${CONFIGURATION} && ninja )'
 
@@ -85,7 +84,7 @@ artifacts:
        type: Zip
 
 deploy:
-  - release: PRBoom+ v$(appveyor_build_version
+  - release: PRBoom+ v$(appveyor_build_version)
     description: '64-bit Windows and Linux builds from AppVeyor.'
 
     provider: GitHub
