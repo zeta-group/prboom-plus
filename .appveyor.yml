@@ -60,7 +60,7 @@ before_build:
 
 after_build:
     # Package PRBoom+ output together into a zip package
-  - cmd: '7z a "prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip" "./*.exe" "./*.wad" "./*.dll"'
+  - cmd: '7z a "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.exe" "./*.wad" "./*.dll"'
 
   - sh:
       zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
