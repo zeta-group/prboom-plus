@@ -1,10 +1,11 @@
-version: '2.5.1.7bot-r{APPVEYOR_REPO_COMMIT]-b{build}'
+version: '2.5.1.7bot-b{build}'
 
 
 environment:
     matrix:
       - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
         GENERATOR: Ninja
+        REV_VERSION: '$(version)-r$(APPVEYOR_REPO_COMMIT)'
         DEPS:
           'libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
           ninja-build zstd'
@@ -12,6 +13,7 @@ environment:
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
         MSVC: 2015
+        REV_VERSION: '$(version)-r$(APPVEYOR_REPO_COMMIT)'
         DEPS:
           'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
@@ -27,6 +29,7 @@ environment:
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
         GENERATOR: Visual Studio 15 2017 Win64
         MSVC: 2017
+        REV_VERSION: '$(version)-r$(APPVEYOR_REPO_COMMIT)'
         DEPS:
           'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
@@ -62,12 +65,12 @@ before_build:
 
 after_build:
     # Package PRBoom+ output together into a zip package
-  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%APPVEYOR_BUILD_VERSION%.zip" "./*.exe"'
-  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%APPVEYOR_BUILD_VERSION%.zip" "./*.cmd"'
-  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%APPVEYOR_BUILD_VERSION%.zip" "./*.wad"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%REV_VERSION%.zip" "./*.exe"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%REV_VERSION%.zip" "./*.cmd"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%REV_VERSION%.zip" "./*.wad"'
 
   - sh:
-      zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
+      zip -9v "prboom-plus-linux64-${CONFIGURATION}-${REV_VERSION}.zip"
       "./"{prboom-plus{.wad,-game-server},{pr,gl}boom-plus}
 
 build_script:
@@ -79,16 +82,16 @@ build: Script
   #project: $(APPVEYOR_BUILD_FOLDER)/PrBoom-Plus.sln
 
 artifacts:
-     - path: prboom-plus-win64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip
+     - path: prboom-plus-win64-${CONFIGURATION}-${REV_VERSION}.zip
        name: 'PRBoom+ Windows 64-bit build (MSVC)'
        type: Zip
 
-     - path: prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip
+     - path: prboom-plus-linux64-${CONFIGURATION}-${REV_VERSION}.zip
        name: 'PRBoom+ Linux 64-bit build (clang)'
        type: Zip
 
 deploy:
-  - release: PRBoom+ v$(appveyor_build_version)
+  - release: PRBoom+ v$(REV_VERSION)
     description: '64-bit Windows and Linux builds from AppVeyor.'
 
     provider: GitHub
