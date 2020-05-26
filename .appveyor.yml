@@ -1,4 +1,4 @@
-version: '2.5.1.7br{build}'
+version: '2.5.1.7bot-r$(APPVEYOR_REPO_COMMIT)-b{build}'
 
 
 environment:
@@ -6,8 +6,8 @@ environment:
       - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
         GENERATOR: Ninja
         DEPS:
-          libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
-          ninja-build zstd
+          'libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
+          ninja-build zstd'
           
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
@@ -60,7 +60,9 @@ before_build:
 
 after_build:
     # Package PRBoom+ output together into a zip package
-  - cmd: '7z a "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.exe" "./*.wad" "./*.dll"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.exe"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.cmd"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.wad"'
 
   - sh:
       zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
