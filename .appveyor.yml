@@ -1,4 +1,4 @@
-version: '2.5.1.7bot-r$(APPVEYOR_REPO_COMMIT)-b{build}'
+version: '2.5.1.7bot-r{APPVEYOR_REPO_COMMIT]-b{build}'
 
 
 environment:
@@ -11,6 +11,7 @@ environment:
           
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
+        MSVC: 2015
         DEPS:
           'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
@@ -25,6 +26,7 @@ environment:
           
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
         GENERATOR: Visual Studio 15 2017 Win64
+        MSVC: 2017
         DEPS:
           'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
@@ -60,9 +62,9 @@ before_build:
 
 after_build:
     # Package PRBoom+ output together into a zip package
-  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.exe"'
-  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.cmd"'
-  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-%APPVEYOR_BUILD_VERSION%.zip" "./*.wad"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%APPVEYOR_BUILD_VERSION%.zip" "./*.exe"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%APPVEYOR_BUILD_VERSION%.zip" "./*.cmd"'
+  - cmd: '7z a -y -m0=zip -mx=9 "prboom-plus-win64-%CONFIGURATION%-msvc%MSVC%-%APPVEYOR_BUILD_VERSION%.zip" "./*.wad"'
 
   - sh:
       zip -9v "prboom-plus-linux64-${CONFIGURATION}-${APPVEYOR_BUILD_VERSION}.zip"
