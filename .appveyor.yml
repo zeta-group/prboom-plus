@@ -5,7 +5,7 @@ environment:
     matrix:
       - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
         GENERATOR: Ninja
-        REV_VERSION: '$(version)-r$(APPVEYOR_REPO_COMMIT)'
+        REV_VERSION: '2.5.1.7bot-r$(APPVEYOR_REPO_COMMIT)'
         DEPS:
           'libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
           ninja-build zstd'
