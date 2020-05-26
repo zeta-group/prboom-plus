@@ -6,7 +6,7 @@ environment:
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
         MSVC: 2015
-        REV_VERSION: '$(version)-r$(APPVEYOR_REPO_COMMIT)'
+        REV_VERSION: '2.5.1.7bot-r$(APPVEYOR_REPO_COMMIT)'
         DEPS:
           'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
@@ -29,7 +29,7 @@ environment:
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
         GENERATOR: Visual Studio 15 2017 Win64
         MSVC: 2017
-        REV_VERSION: '$(version)-r$(APPVEYOR_REPO_COMMIT)'
+        REV_VERSION: '2.5.1.7bot-r$(APPVEYOR_REPO_COMMIT)'
         DEPS:
           'sdl2:$(PLATFORM)-windows
           sdl2-net:$(PLATFORM)-windows
