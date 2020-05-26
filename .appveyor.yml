@@ -3,13 +3,6 @@ version: '2.5.1.7bot-b{build}'
 
 environment:
     matrix:
-      - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-        GENERATOR: Ninja
-        REV_VERSION: '2.5.1.7bot-r$(APPVEYOR_REPO_COMMIT)'
-        DEPS:
-          'libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
-          ninja-build zstd'
-          
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
         GENERATOR: Visual Studio 14 2015 Win64
         MSVC: 2015
@@ -25,6 +18,13 @@ environment:
           fluidsynth:$(PLATFORM)-windows
           portmidi:$(PLATFORM)-windows
           opengl:$(PLATFORM)-windows'
+
+      - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+        GENERATOR: Ninja
+        REV_VERSION: '2.5.1.7bot-r$(APPVEYOR_REPO_COMMIT)'
+        DEPS:
+          'libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-mixer-dev libvorbis-dev libpcre2-dev zlib1g-dev libfluidsynth-dev libportmidi-dev libgl-dev
+          ninja-build zstd'
           
       - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
         GENERATOR: Visual Studio 15 2017 Win64
