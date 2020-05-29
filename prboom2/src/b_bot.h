@@ -98,7 +98,7 @@ typedef struct {
   int lastseeny;    // last seen coordinates of enemy (BST_HUNT)
 } mbot_t;
 
-mbot_t bots[MAXPLAYERS];
+extern mbot_t bots[MAXPLAYERS];
 
 void D_PRBotClear(mbot_t *mbot);
 void D_PRBotCallInit(mbot_t *mbot, int playernum);

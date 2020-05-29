@@ -65,6 +65,8 @@
 extern player_t players[MAXPLAYERS];
 extern dboolean playeringame[MAXPLAYERS];
 
+mbot_t bots[MAXPLAYERS];
+
 static void D_PRBot_PrintState(mbot_t *bot);
 static void D_PRBot_NextState(mbot_t *bot);
 void P_PRBot_CheckInits(void);
