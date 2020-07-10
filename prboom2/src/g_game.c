@@ -1581,6 +1581,9 @@ void G_DoCompleted (void)
   if (automapmode & am_active)
     AM_Stop();
 
+  wminfo.nextep = wminfo.epsd = gameepisode -1;
+  wminfo.last = gamemap -1;
+
   wminfo.lastmapinfo = gamemapinfo;
   wminfo.nextmapinfo = NULL;
   if (gamemapinfo)
@@ -1598,6 +1601,12 @@ void G_DoCompleted (void)
 		  G_ValidateMapName(next, &wminfo.nextep, &wminfo.next);
 		  wminfo.nextep--;
 		  wminfo.next--;
+		  // episode change
+		  if (wminfo.nextep != wminfo.epsd)
+		  {
+		    for (i = 0; i < MAXPLAYERS; i++)
+		      players[i].didsecret = false;
+		  }
 		  wminfo.didsecret = players[consoleplayer].didsecret;
 		  wminfo.partime = gamemapinfo->partime;
 		  goto frommapinfo;	// skip past the default setup.
@@ -1629,8 +1638,6 @@ void G_DoCompleted (void)
   }
 
   wminfo.didsecret = players[consoleplayer].didsecret;
-  wminfo.nextep = wminfo.epsd = gameepisode -1;
-  wminfo.last = gamemap -1;
 
   // wminfo.next is 0 biased, unlike gamemap
   if (gamemode == commercial)
@@ -4082,6 +4089,10 @@ void G_ReadDemoContinueTiccmd (ticcmd_t* cmd)
   {
     demo_continue_p = NULL;
     democontinue = false;
+    // Sometimes this bit is not available
+    if ((demo_compatibility && !prboom_comp[PC_ALLOW_SSG_DIRECT].state) ||
+      (cmd->buttons & BT_CHANGE) == 0)
+      cmd->buttons |= BT_JOIN;
   }
 }
 
