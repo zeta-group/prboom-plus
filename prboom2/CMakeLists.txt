@@ -9,6 +9,8 @@ include(TargetArch)
 include(TestBigEndian)
 TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
 
+include(GNUInstallDirs)
+
 # Automated dependencies discovery, mostly needed for MSVC
 target_architecture(TARGET_ARCH)
 if(${TARGET_ARCH} MATCHES "i386")
@@ -46,7 +48,7 @@ if(NOT WIN32)
     endif()
 endif()
 check_symbol_exists(usleep "unistd.h" HAVE_USLEEP)
-check_symbol_exists(sys_siglist "signal.h" HAVE_DECL_SYS_SIGLIST)
+check_symbol_exists(strsignal "string.h" HAVE_STRSIGNAL)
 
 include(CheckIncludeFile)
 
@@ -184,4 +186,5 @@ set(WAD_DATA prboom-plus.wad)
 set(WAD_DATA_PATH "${PRBOOM_OUTPUT_PATH}/${WAD_DATA}")
 
 add_subdirectory(data)
+add_subdirectory(doc)
 add_subdirectory(src)
