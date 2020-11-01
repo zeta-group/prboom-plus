@@ -266,10 +266,10 @@ static mbot_t *current_bot;
 // Modified version of PIT_FindTarget.
 static dboolean PIT_FindBotTarget(mobj_t *mo)
 {
-  mobj_t *actor = current_actor;
-  mbot_t *bot = current_bot;
+    mobj_t *actor = current_actor;
+    mbot_t *bot = current_bot;
 
-  if (!(
+    if (!(
           (
               ((mo->flags & MF_FRIEND) ^ (actor->flags & MF_FRIEND) && mo->type != MT_PLAYER) ||
               (deathmatch && mo->type == MT_PLAYER)) &&
@@ -277,21 +277,45 @@ static dboolean PIT_FindBotTarget(mobj_t *mo)
           (mo->flags & MF_COUNTKILL || mo->type == MT_SKULL || mo->type == MT_PLAYER)))
     return true; // Invalid target
 
-  if (!P_IsVisible(actor, mo, false))
+    if (!P_IsVisible(actor, mo, false))
     return true;
 
-  D_SetMObj(&bot->enemy, mo);
+    D_SetMObj(&bot->enemy, mo);
 
-  // Move the selected monster to the end of its associated
-  // list, so that it gets searched last next time.
-  {
-    thinker_t *cap = &thinkerclasscap[(deathmatch || mo->flags & MF_FRIEND) ? th_enemies : th_friends];
-    (mo->thinker.cprev->cnext = mo->thinker.cnext)->cprev = mo->thinker.cprev;
-    (mo->thinker.cprev = cap->cprev)->cnext = &mo->thinker;
-    (mo->thinker.cnext = cap)->cprev = &mo->thinker;
-  }
+    // Move the selected monster to the end of its associated
+    // list, so that it gets searched last next time.
+    {
+        thinker_t *mthinker, *next, *prev; // local variables for readability and easier debugging
 
-  return false;
+        thinker_t *cap = &thinkerclasscap[(deathmatch || mo->flags & MF_FRIEND) ? th_enemies : th_friends];
+
+        mthinker = mo->thinker;
+
+        next = mthinker.cnext;
+        prev = mthinker.cprev;
+
+        if (next != NULL) {
+            next->cprev = mthinker->cprev;
+        }
+
+        if (prev != NULL) {
+            prev->cnext = mthinker->cnext;
+        }
+
+        // also setting prev, next for debugging (although it'll probably not be needed :p)
+        mthinker.cprev = prev = cap->cprev;
+        mthinker.cnext = next = cap;
+
+        if (prev != NULL) {
+            prev->cnext = mthinker;
+        }
+
+        if (next != NULL) {
+            next->cprev = mthinker;
+        }
+    }
+
+    return false;
 }
 
 static dboolean D_PRBot_LookFind(mbot_t *bot)
