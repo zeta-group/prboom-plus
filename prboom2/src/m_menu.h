@@ -138,10 +138,10 @@ extern dboolean menu_background;
  */
 
 typedef enum {
-  m_null,       // Has no meaning; not applicable
-  m_scrn,       // A key can not be assigned to more than one action
-  m_map,        // in the same group. A key can be assigned to one
-  m_menu,       // action in one group, and another action in another.
+    m_null,       // Has no meaning; not applicable
+    m_scrn,       // A key can not be assigned to more than one action
+    m_map,        // in the same group. A key can be assigned to one
+    m_menu,       // action in one group, and another action in another.
 } setup_group;
 
 /****************************
@@ -161,27 +161,25 @@ typedef enum {
  * Moved from m_menu.c to m_menu.h so that m_misc.c can use it.
  */
 
-typedef struct setup_menu_s
-{
-  const char  *m_text;  /* text to display */
-  int         m_flags;  /* phares 4/17/98: flag bits S_* (defined above) */
-  setup_group m_group;  /* Group */
-  short       m_x;      /* screen x position (left is 0) */
-  short       m_y;      /* screen y position (top is 0) */
+typedef struct setup_menu_s {
+    const char  *m_text;  /* text to display */
+    int         m_flags;  /* phares 4/17/98: flag bits S_* (defined above) */
+    setup_group m_group;  /* Group */
+    short       m_x;      /* screen x position (left is 0) */
+    short       m_y;      /* screen y position (top is 0) */
 
-  union  /* killough 11/98: The first field is a union of several types */
-  {
-    const void          *var;   /* generic variable */
-    int                 *m_key; /* key value, or 0 if not shown */
-    const char          *name;  /* name */
-    struct default_s    *def;   /* default[] table entry */
-    struct setup_menu_s *menu;  /* next or prev menu */
-  } var;
+    union { /* killough 11/98: The first field is a union of several types */
+        const void          *var;   /* generic variable */
+        int                 *m_key; /* key value, or 0 if not shown */
+        const char          *name;  /* name */
+        struct default_s    *def;   /* default[] table entry */
+        struct setup_menu_s *menu;  /* next or prev menu */
+    } var;
 
-  int         *m_mouse; /* mouse button value, or 0 if not shown */
-  int         *m_joy;   /* joystick button value, or 0 if not shown */
-  void (*action)(void); /* killough 10/98: function to call after changing */
-  const char **selectstrings; /* list of strings for choice value */
+    int         *m_mouse; /* mouse button value, or 0 if not shown */
+    int         *m_joy;   /* joystick button value, or 0 if not shown */
+    void (*action)(void); /* killough 10/98: function to call after changing */
+    const char **selectstrings; /* list of strings for choice value */
 } setup_menu_t;
 
 #endif

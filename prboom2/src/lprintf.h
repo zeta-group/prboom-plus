@@ -38,13 +38,13 @@
 
 typedef enum                /* Logical output levels */
 {
-  LO_INFO=1,                /* One of these is used in each physical output    */
-  LO_CONFIRM=2,             /* call. Which are output, or echoed to console    */
-  LO_WARN=4,                /* if output redirected is determined by the       */
-  LO_ERROR=8,               /* global masks: cons_output_mask,cons_error_mask. */
-  LO_FATAL=16,
-  LO_DEBUG=32,
-  LO_ALWAYS=64,
+    LO_INFO=1,                /* One of these is used in each physical output    */
+    LO_CONFIRM=2,             /* call. Which are output, or echoed to console    */
+    LO_WARN=4,                /* if output redirected is determined by the       */
+    LO_ERROR=8,               /* global masks: cons_output_mask,cons_error_mask. */
+    LO_FATAL=16,
+    LO_DEBUG=32,
+    LO_ALWAYS=64,
 } OutputLevels;
 
 #ifndef __GNUC__

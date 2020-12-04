@@ -57,8 +57,7 @@
 #define MAXNETNODES             8
 
 
-typedef enum
-{
+typedef enum {
     CMD_SEND    = 1,
     CMD_GET     = 2
 
@@ -68,8 +67,7 @@ typedef enum
 //
 // Network packet data.
 //
-typedef struct
-{
+typedef struct {
     // High bit is retransmit request.
     unsigned            checksum;
     // Only valid if NCMD_RETRANSMIT.
@@ -110,35 +108,32 @@ typedef struct
 //There's a portable way to do it without having to know the sizes.
 
 #define STARTUPLEN 12
-typedef struct
-{
-  byte monsters_remember;
-  byte variable_friction;
-  byte weapon_recoil;
-  byte allow_pushers;
-  byte over_under;
-  byte player_bobbing;
-  byte fastparm;
-  byte demo_insurance;
-  unsigned int rngseed;
-  char filler[sizeof(ticcmd_t)*BACKUPTICS-STARTUPLEN];
+typedef struct {
+    byte monsters_remember;
+    byte variable_friction;
+    byte weapon_recoil;
+    byte allow_pushers;
+    byte over_under;
+    byte player_bobbing;
+    byte fastparm;
+    byte demo_insurance;
+    unsigned int rngseed;
+    char filler[sizeof(ticcmd_t)*BACKUPTICS-STARTUPLEN];
 } startup_t;
 
 typedef enum {
-  // Leave space, so low values corresponding to normal netgame setup packets can be ignored
-  nm_plcolour = 3,
-  nm_savegamename = 4,
+    // Leave space, so low values corresponding to normal netgame setup packets can be ignored
+    nm_plcolour = 3,
+    nm_savegamename = 4,
 } netmisctype_t;
 
-typedef struct
-{
-  netmisctype_t type;
-  size_t len;
-  byte value[sizeof(ticcmd_t)*BACKUPTICS - sizeof(netmisctype_t) - sizeof(size_t)];
+typedef struct {
+    netmisctype_t type;
+    size_t len;
+    byte value[sizeof(ticcmd_t)*BACKUPTICS - sizeof(netmisctype_t) - sizeof(size_t)];
 } netmisc_t;
 
-typedef struct
-{
+typedef struct {
     // Supposed to be DOOMCOM_ID?
     long                id;
 

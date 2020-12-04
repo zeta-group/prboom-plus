@@ -48,19 +48,19 @@
 #define PT_EARLYOUT     4
 
 typedef struct {
-  fixed_t     x;
-  fixed_t     y;
-  fixed_t     dx;
-  fixed_t     dy;
+    fixed_t     x;
+    fixed_t     y;
+    fixed_t     dx;
+    fixed_t     dy;
 } divline_t;
 
 typedef struct {
-  fixed_t     frac;           /* along trace line */
-  dboolean     isaline;
-  union {
-    mobj_t* thing;
-    line_t* line;
-  } d;
+    fixed_t     frac;           /* along trace line */
+    dboolean     isaline;
+    union {
+        mobj_t* thing;
+        line_t* line;
+    } d;
 } intercept_t;
 
 typedef dboolean (*traverser_t)(intercept_t *in);
@@ -83,7 +83,7 @@ void    P_SetThingPosition(mobj_t *thing);
 dboolean P_BlockLinesIterator (int x, int y, dboolean func(line_t *));
 dboolean P_BlockThingsIterator(int x, int y, dboolean func(mobj_t *));
 dboolean P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                       int flags, dboolean trav(intercept_t *));
+                        int flags, dboolean trav(intercept_t *));
 
 // MAES: support 512x512 blockmaps.
 int P_GetSafeBlockX(int coord);

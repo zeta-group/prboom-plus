@@ -13,7 +13,7 @@ static void p_checksum_cleanup(void);
 void checksum_gamestate(int tic);
 
 /* vars */
-static void p_checksum_nop(int tic){} /* do nothing */
+static void p_checksum_nop(int tic) {} /* do nothing */
 void (*P_Checksum)(int) = p_checksum_nop;
 
 /*
@@ -29,8 +29,9 @@ void P_RecordChecksum(const char *file) {
     fnsize = strlen(file);
 
     /* special case: write to stdout */
-    if(0 == strncmp("-",file,MIN(1,fnsize)))
+    if(0 == strncmp("-",file,MIN(1,fnsize))) {
         outfile = stdout;
+    }
     else {
         outfile = fopen(file,"wb");
         if(NULL == outfile) {
@@ -49,20 +50,23 @@ void P_ChecksumFinal(void) {
     int i;
     unsigned char digest[16];
 
-    if (!outfile)
-      return;
+    if (!outfile) {
+        return;
+    }
 
     MD5Final(digest, &md5global);
     fprintf(outfile, "final: ");
-    for (i=0; i<16; i++)
+    for (i=0; i<16; i++) {
         fprintf(outfile,"%x", digest[i]);
+    }
     fprintf(outfile, "\n");
     MD5Init(&md5global);
 }
 
 static void p_checksum_cleanup(void) {
-    if (outfile && (outfile != stdout))
+    if (outfile && (outfile != stdout)) {
         fclose(outfile);
+    }
 }
 
 /*
@@ -79,7 +83,9 @@ void checksum_gamestate(int tic) {
     /* based on "ArchivePlayers" */
     MD5Init(&md5ctx);
     for (i=0 ; i<MAXPLAYERS ; i++) {
-        if (!playeringame[i]) continue;
+        if (!playeringame[i]) {
+            continue;
+        }
 
         doom_snprintf (buffer, sizeof(buffer), "%d", players[i].health);
         buffer[sizeof(buffer)-1] = 0;

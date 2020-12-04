@@ -67,23 +67,20 @@
  * coordinates are given for a 320*200 view screen.
  */
 
-typedef enum
-{
-  ps_weapon,
-  ps_flash,
-  NUMPSPRITES
+typedef enum {
+    ps_weapon,
+    ps_flash,
+    NUMPSPRITES
 } psprnum_t;
 
-typedef struct
-{
-  state_t *state;       /* a NULL state means not active */
-  int     tics;
-  fixed_t sx;
-  fixed_t sy;
+typedef struct {
+    state_t *state;       /* a NULL state means not active */
+    int     tics;
+    fixed_t sx;
+    fixed_t sy;
 } pspdef_t;
 
-enum
-{
+enum {
     CENTERWEAPON_OFF,
     CENTERWEAPON_HOR,
     CENTERWEAPON_HORVER,

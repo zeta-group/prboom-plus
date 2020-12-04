@@ -95,28 +95,25 @@ extern int hud_displayed;   /* hud is displayed */
 extern int hud_num;
 extern int huds_count;
 
-typedef struct custom_message_s
-{
-  int ticks;
-  int cm;
-  int sfx;
-  const char *msg;
+typedef struct custom_message_s {
+    int ticks;
+    int cm;
+    int sfx;
+    const char *msg;
 } custom_message_t;
 
-typedef struct message_thinker_s
-{
-  thinker_t thinker;
-  int plr;
-  int delay;
-  custom_message_t msg;
+typedef struct message_thinker_s {
+    thinker_t thinker;
+    int plr;
+    int delay;
+    custom_message_t msg;
 } message_thinker_t;
 
-typedef struct crosshair_s
-{
-  int lump;
-  int w, h, flags;
-  int target_x, target_y, target_z, target_sprite;
-  float target_screen_x, target_screen_y;
+typedef struct crosshair_s {
+    int lump;
+    int w, h, flags;
+    int target_x, target_y, target_z, target_sprite;
+    float target_screen_x, target_screen_y;
 } crosshair_t;
 extern crosshair_t crosshair;
 

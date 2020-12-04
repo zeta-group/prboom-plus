@@ -40,16 +40,14 @@
 // e6y: exeptions handling
 //
 
-typedef enum
-{
-  EXEPTION_NONE,
-  EXEPTION_glFramebufferTexture2DEXT,
-  EXEPTION_MAX
+typedef enum {
+    EXEPTION_NONE,
+    EXEPTION_glFramebufferTexture2DEXT,
+    EXEPTION_MAX
 } ExeptionsList_t;
 
-typedef struct
-{
-  const char * error_message;
+typedef struct {
+    const char * error_message;
 } ExeptionParam_t;
 
 extern ExeptionParam_t ExeptionsParams[];

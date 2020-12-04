@@ -58,12 +58,12 @@ void P_SetTarget(mobj_t **mo, mobj_t *target);   // killough 11/98
  * pending deletion on a class list too
  */
 typedef enum {
-  th_delete,
-  th_misc,
-  th_friends,
-  th_enemies,
-  NUMTHCLASS,
-  th_all = NUMTHCLASS, /* For P_NextThinker, indicates "any class" */
+    th_delete,
+    th_misc,
+    th_friends,
+    th_enemies,
+    NUMTHCLASS,
+    th_all = NUMTHCLASS, /* For P_NextThinker, indicates "any class" */
 } th_class;
 
 extern thinker_t thinkerclasscap[];

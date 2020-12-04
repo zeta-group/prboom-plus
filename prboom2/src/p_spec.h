@@ -197,8 +197,7 @@
 // Animating textures and planes
 // There is another anim_t used in wi_stuff, unrelated.
 //
-typedef struct
-{
+typedef struct {
     dboolean     istexture;
     int         picnum;
     int         basepic;
@@ -208,134 +207,122 @@ typedef struct
 } anim_t;
 
 //e6y
-typedef struct
-{
-  int index;
-  anim_t *anim;
+typedef struct {
+    int index;
+    anim_t *anim;
 } TAnimItemParam;
 extern TAnimItemParam *anim_flats;
 extern TAnimItemParam *anim_textures;
 
 // define names for the TriggerType field of the general linedefs
 
-typedef enum
-{
-  WalkOnce,
-  WalkMany,
-  SwitchOnce,
-  SwitchMany,
-  GunOnce,
-  GunMany,
-  PushOnce,
-  PushMany,
+typedef enum {
+    WalkOnce,
+    WalkMany,
+    SwitchOnce,
+    SwitchMany,
+    GunOnce,
+    GunMany,
+    PushOnce,
+    PushMany,
 } triggertype_e;
 
 // define names for the Speed field of the general linedefs
 
-typedef enum
-{
-  SpeedSlow,
-  SpeedNormal,
-  SpeedFast,
-  SpeedTurbo,
+typedef enum {
+    SpeedSlow,
+    SpeedNormal,
+    SpeedFast,
+    SpeedTurbo,
 } motionspeed_e;
 
 // define names for the Target field of the general floor
 
-typedef enum
-{
-  FtoHnF,
-  FtoLnF,
-  FtoNnF,
-  FtoLnC,
-  FtoC,
-  FbyST,
-  Fby24,
-  Fby32,
+typedef enum {
+    FtoHnF,
+    FtoLnF,
+    FtoNnF,
+    FtoLnC,
+    FtoC,
+    FbyST,
+    Fby24,
+    Fby32,
 } floortarget_e;
 
 // define names for the Changer Type field of the general floor
 
-typedef enum
-{
-  FNoChg,
-  FChgZero,
-  FChgTxt,
-  FChgTyp,
+typedef enum {
+    FNoChg,
+    FChgZero,
+    FChgTxt,
+    FChgTyp,
 } floorchange_e;
 
 // define names for the Change Model field of the general floor
 
-typedef enum
-{
-  FTriggerModel,
-  FNumericModel,
+typedef enum {
+    FTriggerModel,
+    FNumericModel,
 } floormodel_t;
 
 // define names for the Target field of the general ceiling
 
-typedef enum
-{
-  CtoHnC,
-  CtoLnC,
-  CtoNnC,
-  CtoHnF,
-  CtoF,
-  CbyST,
-  Cby24,
-  Cby32,
+typedef enum {
+    CtoHnC,
+    CtoLnC,
+    CtoNnC,
+    CtoHnF,
+    CtoF,
+    CbyST,
+    Cby24,
+    Cby32,
 } ceilingtarget_e;
 
 // define names for the Changer Type field of the general ceiling
 
-typedef enum
-{
-  CNoChg,
-  CChgZero,
-  CChgTxt,
-  CChgTyp,
+typedef enum {
+    CNoChg,
+    CChgZero,
+    CChgTxt,
+    CChgTyp,
 } ceilingchange_e;
 
 // define names for the Change Model field of the general ceiling
 
-typedef enum
-{
-  CTriggerModel,
-  CNumericModel,
+typedef enum {
+    CTriggerModel,
+    CNumericModel,
 } ceilingmodel_t;
 
 // define names for the Target field of the general lift
 
-typedef enum
-{
-  F2LnF,
-  F2NnF,
-  F2LnC,
-  LnF2HnF,
+typedef enum {
+    F2LnF,
+    F2NnF,
+    F2LnC,
+    LnF2HnF,
 } lifttarget_e;
 
 // define names for the door Kind field of the general ceiling
 
-typedef enum
-{
-  OdCDoor,
-  ODoor,
-  CdODoor,
-  CDoor,
+typedef enum {
+    OdCDoor,
+    ODoor,
+    CdODoor,
+    CDoor,
 } doorkind_e;
 
 // define names for the locked door Kind field of the general ceiling
 
-typedef enum
-{
-  AnyKey,
-  RCard,
-  BCard,
-  YCard,
-  RSkull,
-  BSkull,
-  YSkull,
-  AllKeys,
+typedef enum {
+    AnyKey,
+    RCard,
+    BCard,
+    YCard,
+    RSkull,
+    BSkull,
+    YSkull,
+    AllKeys,
 } keykind_e;
 
 //////////////////////////////////////////////////////////////////
@@ -346,163 +333,154 @@ typedef enum
 
 //jff 2/23/98 identify the special classes that can share sectors
 
-typedef enum
-{
-  floor_special,
-  ceiling_special,
-  lighting_special,
+typedef enum {
+    floor_special,
+    ceiling_special,
+    lighting_special,
 } special_e;
 
 //jff 3/15/98 pure texture/type change for better generalized support
-typedef enum
-{
-  trigChangeOnly,
-  numChangeOnly,
+typedef enum {
+    trigChangeOnly,
+    numChangeOnly,
 } change_e;
 
 // p_plats
 
-typedef enum
-{
-  up,
-  down,
-  waiting,
-  in_stasis
+typedef enum {
+    up,
+    down,
+    waiting,
+    in_stasis
 } plat_e;
 
-typedef enum
-{
-  perpetualRaise,
-  downWaitUpStay,
-  raiseAndChange,
-  raiseToNearestAndChange,
-  blazeDWUS,
-  genLift,      //jff added to support generalized Plat types
-  genPerpetual,
-  toggleUpDn,   //jff 3/14/98 added to support instant toggle type
+typedef enum {
+    perpetualRaise,
+    downWaitUpStay,
+    raiseAndChange,
+    raiseToNearestAndChange,
+    blazeDWUS,
+    genLift,      //jff added to support generalized Plat types
+    genPerpetual,
+    toggleUpDn,   //jff 3/14/98 added to support instant toggle type
 
 } plattype_e;
 
 // p_doors
 
-typedef enum
-{
-  normal,
-  close30ThenOpen,
-  closeDoor,
-  openDoor,
-  raiseIn5Mins,
-  blazeRaise,
-  blazeOpen,
-  blazeClose,
+typedef enum {
+    normal,
+    close30ThenOpen,
+    closeDoor,
+    openDoor,
+    raiseIn5Mins,
+    blazeRaise,
+    blazeOpen,
+    blazeClose,
 
-  //jff 02/05/98 add generalize door types
-  genRaise,
-  genBlazeRaise,
-  genOpen,
-  genBlazeOpen,
-  genClose,
-  genBlazeClose,
-  genCdO,
-  genBlazeCdO,
+    //jff 02/05/98 add generalize door types
+    genRaise,
+    genBlazeRaise,
+    genOpen,
+    genBlazeOpen,
+    genClose,
+    genBlazeClose,
+    genCdO,
+    genBlazeCdO,
 } vldoor_e;
 
 // p_ceilng
 
-typedef enum
-{
-  lowerToFloor,
-  raiseToHighest,
-  lowerToLowest,
-  lowerToMaxFloor,
-  lowerAndCrush,
-  crushAndRaise,
-  fastCrushAndRaise,
-  silentCrushAndRaise,
+typedef enum {
+    lowerToFloor,
+    raiseToHighest,
+    lowerToLowest,
+    lowerToMaxFloor,
+    lowerAndCrush,
+    crushAndRaise,
+    fastCrushAndRaise,
+    silentCrushAndRaise,
 
-  //jff 02/04/98 add types for generalized ceiling mover
-  genCeiling,
-  genCeilingChg,
-  genCeilingChg0,
-  genCeilingChgT,
+    //jff 02/04/98 add types for generalized ceiling mover
+    genCeiling,
+    genCeilingChg,
+    genCeilingChg0,
+    genCeilingChgT,
 
-  //jff 02/05/98 add types for generalized ceiling mover
-  genCrusher,
-  genSilentCrusher,
+    //jff 02/05/98 add types for generalized ceiling mover
+    genCrusher,
+    genSilentCrusher,
 
 } ceiling_e;
 
 // p_floor
 
-typedef enum
-{
-  // lower floor to highest surrounding floor
-  lowerFloor,
+typedef enum {
+    // lower floor to highest surrounding floor
+    lowerFloor,
 
-  // lower floor to lowest surrounding floor
-  lowerFloorToLowest,
+    // lower floor to lowest surrounding floor
+    lowerFloorToLowest,
 
-  // lower floor to highest surrounding floor VERY FAST
-  turboLower,
+    // lower floor to highest surrounding floor VERY FAST
+    turboLower,
 
-  // raise floor to lowest surrounding CEILING
-  raiseFloor,
+    // raise floor to lowest surrounding CEILING
+    raiseFloor,
 
-  // raise floor to next highest surrounding floor
-  raiseFloorToNearest,
+    // raise floor to next highest surrounding floor
+    raiseFloorToNearest,
 
-  //jff 02/03/98 lower floor to next lowest neighbor
-  lowerFloorToNearest,
+    //jff 02/03/98 lower floor to next lowest neighbor
+    lowerFloorToNearest,
 
-  //jff 02/03/98 lower floor 24 absolute
-  lowerFloor24,
+    //jff 02/03/98 lower floor 24 absolute
+    lowerFloor24,
 
-  //jff 02/03/98 lower floor 32 absolute
-  lowerFloor32Turbo,
+    //jff 02/03/98 lower floor 32 absolute
+    lowerFloor32Turbo,
 
-  // raise floor to shortest height texture around it
-  raiseToTexture,
+    // raise floor to shortest height texture around it
+    raiseToTexture,
 
-  // lower floor to lowest surrounding floor
-  //  and change floorpic
-  lowerAndChange,
+    // lower floor to lowest surrounding floor
+    //  and change floorpic
+    lowerAndChange,
 
-  raiseFloor24,
+    raiseFloor24,
 
-  //jff 02/03/98 raise floor 32 absolute
-  raiseFloor32Turbo,
+    //jff 02/03/98 raise floor 32 absolute
+    raiseFloor32Turbo,
 
-  raiseFloor24AndChange,
-  raiseFloorCrush,
+    raiseFloor24AndChange,
+    raiseFloorCrush,
 
-  // raise to next highest floor, turbo-speed
-  raiseFloorTurbo,
-  donutRaise,
-  raiseFloor512,
+    // raise to next highest floor, turbo-speed
+    raiseFloorTurbo,
+    donutRaise,
+    raiseFloor512,
 
-  //jff 02/04/98  add types for generalized floor mover
-  genFloor,
-  genFloorChg,
-  genFloorChg0,
-  genFloorChgT,
+    //jff 02/04/98  add types for generalized floor mover
+    genFloor,
+    genFloorChg,
+    genFloorChg0,
+    genFloorChgT,
 
-  //new types for stair builders
-  buildStair,
-  genBuildStair,
+    //new types for stair builders
+    buildStair,
+    genBuildStair,
 } floor_e;
 
-typedef enum
-{
-  build8, // slowly build by 8
-  turbo16 // quickly build by 16
+typedef enum {
+    build8, // slowly build by 8
+    turbo16 // quickly build by 16
 
 } stair_e;
 
-typedef enum
-{
-  elevateUp,
-  elevateDown,
-  elevateCurrent,
+typedef enum {
+    elevateUp,
+    elevateDown,
+    elevateCurrent,
 } elevator_e;
 
 //////////////////////////////////////////////////////////////////
@@ -512,8 +490,7 @@ typedef enum
 //////////////////////////////////////////////////////////////////
 
 // texture type enum
-typedef enum
-{
+typedef enum {
     top,
     middle,
     bottom
@@ -521,11 +498,10 @@ typedef enum
 } bwhere_e;
 
 // crush check returns
-typedef enum
-{
-  ok,
-  crushed,
-  pastdest
+typedef enum {
+    ok,
+    crushed,
+    pastdest
 } result_e;
 
 //////////////////////////////////////////////////////////////////
@@ -542,184 +518,173 @@ typedef enum
 #pragma options align=packed
 #endif
 
-typedef struct
-{
-  char name1[9];
-  char name2[9];
-  short episode;
+typedef struct {
+    char name1[9];
+    char name2[9];
+    short episode;
 } PACKEDATTR switchlist_t; //jff 3/23/98 pack to read from memory
 
 #if defined(__MWERKS__)
 #pragma options align=reset
 #endif
 
-typedef struct
-{
-  line_t* line;
-  bwhere_e where;
-  int   btexture;
-  int   btimer;
-  mobj_t* soundorg;
+typedef struct {
+    line_t* line;
+    bwhere_e where;
+    int   btexture;
+    int   btimer;
+    mobj_t* soundorg;
 
 } button_t;
 
 // p_lights
 
-typedef struct
-{
-  thinker_t thinker;
-  sector_t* sector;
-  int count;
-  int maxlight;
-  int minlight;
+typedef struct {
+    thinker_t thinker;
+    sector_t* sector;
+    int count;
+    int maxlight;
+    int minlight;
 
 } fireflicker_t;
 
-typedef struct
-{
-  thinker_t thinker;
-  sector_t* sector;
-  int count;
-  int maxlight;
-  int minlight;
-  int maxtime;
-  int mintime;
+typedef struct {
+    thinker_t thinker;
+    sector_t* sector;
+    int count;
+    int maxlight;
+    int minlight;
+    int maxtime;
+    int mintime;
 
 } lightflash_t;
 
-typedef struct
-{
-  thinker_t thinker;
-  sector_t* sector;
-  int count;
-  int minlight;
-  int maxlight;
-  int darktime;
-  int brighttime;
+typedef struct {
+    thinker_t thinker;
+    sector_t* sector;
+    int count;
+    int minlight;
+    int maxlight;
+    int darktime;
+    int brighttime;
 
 } strobe_t;
 
-typedef struct
-{
-  thinker_t thinker;
-  sector_t* sector;
-  int minlight;
-  int maxlight;
-  int direction;
+typedef struct {
+    thinker_t thinker;
+    sector_t* sector;
+    int minlight;
+    int maxlight;
+    int direction;
 
 } glow_t;
 
 // p_plats
 
-typedef struct
-{
-  thinker_t thinker;
-  sector_t* sector;
-  fixed_t speed;
-  fixed_t low;
-  fixed_t high;
-  int wait;
-  int count;
-  plat_e status;
-  plat_e oldstatus;
-  dboolean crush;
-  int tag;
-  plattype_e type;
+typedef struct {
+    thinker_t thinker;
+    sector_t* sector;
+    fixed_t speed;
+    fixed_t low;
+    fixed_t high;
+    int wait;
+    int count;
+    plat_e status;
+    plat_e oldstatus;
+    dboolean crush;
+    int tag;
+    plattype_e type;
 
-  struct platlist *list;   // killough
+    struct platlist *list;   // killough
 } plat_t;
 
 // New limit-free plat structure -- killough
 
 typedef struct platlist {
-  plat_t *plat;
-  struct platlist *next,**prev;
+    plat_t *plat;
+    struct platlist *next,**prev;
 } platlist_t;
 
 // p_ceilng
 
-typedef struct
-{
-  thinker_t thinker;
-  vldoor_e type;
-  sector_t* sector;
-  fixed_t topheight;
-  fixed_t speed;
+typedef struct {
+    thinker_t thinker;
+    vldoor_e type;
+    sector_t* sector;
+    fixed_t topheight;
+    fixed_t speed;
 
-  // 1 = up, 0 = waiting at top, -1 = down
-  int direction;
+    // 1 = up, 0 = waiting at top, -1 = down
+    int direction;
 
-  // tics to wait at the top
-  int topwait;
-  // (keep in case a door going down is reset)
-  // when it reaches 0, start going down
-  int topcountdown;
+    // tics to wait at the top
+    int topwait;
+    // (keep in case a door going down is reset)
+    // when it reaches 0, start going down
+    int topcountdown;
 
-  //jff 1/31/98 keep track of line door is triggered by
-  line_t *line;
+    //jff 1/31/98 keep track of line door is triggered by
+    line_t *line;
 
-  /* killough 10/98: sector tag for gradual lighting effects */
-  int lighttag;
+    /* killough 10/98: sector tag for gradual lighting effects */
+    int lighttag;
 } vldoor_t;
 
 // p_doors
 
-typedef struct
-{
-  thinker_t thinker;
-  ceiling_e type;
-  sector_t* sector;
-  fixed_t bottomheight;
-  fixed_t topheight;
-  fixed_t speed;
-  fixed_t oldspeed;
-  dboolean crush;
+typedef struct {
+    thinker_t thinker;
+    ceiling_e type;
+    sector_t* sector;
+    fixed_t bottomheight;
+    fixed_t topheight;
+    fixed_t speed;
+    fixed_t oldspeed;
+    dboolean crush;
 
-  //jff 02/04/98 add these to support ceiling changers
-  int newspecial;
-  int oldspecial; //jff 3/14/98 add to fix bug in change transfers
-  short texture;
+    //jff 02/04/98 add these to support ceiling changers
+    int newspecial;
+    int oldspecial; //jff 3/14/98 add to fix bug in change transfers
+    short texture;
 
-  // 1 = up, 0 = waiting, -1 = down
-  int direction;
+    // 1 = up, 0 = waiting, -1 = down
+    int direction;
 
-  // ID
-  int tag;
-  int olddirection;
-  struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
+    // ID
+    int tag;
+    int olddirection;
+    struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
 } ceiling_t;
 
 typedef struct ceilinglist {
-  ceiling_t *ceiling;
-  struct ceilinglist *next,**prev;
+    ceiling_t *ceiling;
+    struct ceilinglist *next,**prev;
 } ceilinglist_t;
 
 // p_floor
 
-typedef struct
-{
-  thinker_t thinker;
-  floor_e type;
-  dboolean crush;
-  sector_t* sector;
-  int direction;
-  int newspecial;
-  int oldspecial;   //jff 3/14/98 add to fix bug in change transfers
-  short texture;
-  fixed_t floordestheight;
-  fixed_t speed;
+typedef struct {
+    thinker_t thinker;
+    floor_e type;
+    dboolean crush;
+    sector_t* sector;
+    int direction;
+    int newspecial;
+    int oldspecial;   //jff 3/14/98 add to fix bug in change transfers
+    short texture;
+    fixed_t floordestheight;
+    fixed_t speed;
 
 } floormove_t;
 
-typedef struct
-{
-  thinker_t thinker;
-  elevator_e type;
-  sector_t* sector;
-  int direction;
-  fixed_t floordestheight;
-  fixed_t ceilingdestheight;
-  fixed_t speed;
+typedef struct {
+    thinker_t thinker;
+    elevator_e type;
+    sector_t* sector;
+    int direction;
+    fixed_t floordestheight;
+    fixed_t ceilingdestheight;
+    fixed_t speed;
 } elevator_t;
 
 // p_spec
@@ -727,51 +692,49 @@ typedef struct
 // killough 3/7/98: Add generalized scroll effects
 
 typedef struct {
-  thinker_t thinker;   // Thinker structure for scrolling
-  fixed_t dx, dy;      // (dx,dy) scroll speeds
-  int affectee;        // Number of affected sidedef, sector, tag, or whatever
-  int control;         // Control sector (-1 if none) used to control scrolling
-  fixed_t last_height; // Last known height of control sector
-  fixed_t vdx, vdy;    // Accumulated velocity if accelerative
-  int accel;           // Whether it's accelerative
-  enum
-  {
-    sc_side,
-    sc_floor,
-    sc_ceiling,
-    sc_carry,
-    sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
-  } type;              // Type of scroll effect
+    thinker_t thinker;   // Thinker structure for scrolling
+    fixed_t dx, dy;      // (dx,dy) scroll speeds
+    int affectee;        // Number of affected sidedef, sector, tag, or whatever
+    int control;         // Control sector (-1 if none) used to control scrolling
+    fixed_t last_height; // Last known height of control sector
+    fixed_t vdx, vdy;    // Accumulated velocity if accelerative
+    int accel;           // Whether it's accelerative
+    enum {
+        sc_side,
+        sc_floor,
+        sc_ceiling,
+        sc_carry,
+        sc_carry_ceiling,  // killough 4/11/98: carry objects hanging on ceilings
+    } type;              // Type of scroll effect
 } scroll_t;
 
 // phares 3/12/98: added new model of friction for ice/sludge effects
 
 typedef struct {
-  thinker_t thinker;   // Thinker structure for friction
-  int friction;        // friction value (E800 = normal)
-  int movefactor;      // inertia factor when adding to momentum
-  int affectee;        // Number of affected sector
+    thinker_t thinker;   // Thinker structure for friction
+    int friction;        // friction value (E800 = normal)
+    int movefactor;      // inertia factor when adding to momentum
+    int affectee;        // Number of affected sector
 } friction_t;
 
 // phares 3/20/98: added new model of Pushers for push/pull effects
 
 typedef struct {
-  thinker_t thinker;   // Thinker structure for Pusher
-  enum
-  {
-    p_push,
-    p_pull,
-    p_wind,
-    p_current,
-  } type;
-  mobj_t* source;      // Point source if point pusher
-  int x_mag;           // X Strength
-  int y_mag;           // Y Strength
-  int magnitude;       // Vector strength for point pusher
-  int radius;          // Effective radius for point pusher
-  int x;               // X of point source if point pusher
-  int y;               // Y of point source if point pusher
-  int affectee;        // Number of affected sector
+    thinker_t thinker;   // Thinker structure for Pusher
+    enum {
+        p_push,
+        p_pull,
+        p_wind,
+        p_current,
+    } type;
+    mobj_t* source;      // Point source if point pusher
+    int x_mag;           // X Strength
+    int y_mag;           // Y Strength
+    int magnitude;       // Vector strength for point pusher
+    int radius;          // Effective radius for point pusher
+    int x;               // X of point source if point pusher
+    int y;               // Y of point source if point pusher
+    int affectee;        // Number of affected sector
 } pusher_t;
 
 //////////////////////////////////////////////////////////////////
@@ -1096,7 +1059,7 @@ dboolean P_UseSpecialLine
 ( mobj_t* thing,
   line_t* line,
   int   side,
-	dboolean noplayercheck);
+  dboolean noplayercheck);
 
 void P_ShootSpecialLine
 ( mobj_t* thing,

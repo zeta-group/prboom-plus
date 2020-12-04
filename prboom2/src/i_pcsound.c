@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright(C) 2007 Simon Howard
@@ -61,20 +61,17 @@ static float frequencies[] = {
 
 #define NUM_FREQUENCIES (sizeof(frequencies) / sizeof(*frequencies))
 
-void PCSCallbackFunc(int *duration, int *freq)
-{
+void PCSCallbackFunc(int *duration, int *freq) {
     int tone;
 
     *duration = 1000 / 140;
 
-    if (SDL_LockMutex(sound_lock) < 0)
-    {
+    if (SDL_LockMutex(sound_lock) < 0) {
         *freq = 0;
         return;
     }
-    
-    if (current_sound_lump != NULL && current_sound_remaining > 0)
-    {
+
+    if (current_sound_lump != NULL && current_sound_remaining > 0) {
         // Read the next tone
 
         tone = *current_sound_pos;
@@ -83,35 +80,30 @@ void PCSCallbackFunc(int *duration, int *freq)
         // for a full discussion of this.
         // Check we don't overflow the frequency table.
 
-        if (tone < (int)NUM_FREQUENCIES)
-        {
+        if (tone < (int)NUM_FREQUENCIES) {
             *freq = (int) frequencies[tone];
         }
-        else
-        {
+        else {
             *freq = 0;
         }
 
         ++current_sound_pos;
         --current_sound_remaining;
     }
-    else
-    {
+    else {
         *freq = 0;
     }
 
     SDL_UnlockMutex(sound_lock);
 }
 
-static dboolean CachePCSLump(int sound_id)
-{
+static dboolean CachePCSLump(int sound_id) {
     int lumplen;
     int headerlen;
 
     // Free the current sound lump back to the cache
- 
-    if (current_sound_lump != NULL)
-    {
+
+    if (current_sound_lump != NULL) {
         //e6y Z_ChangeTag(current_sound_lump, PU_CACHE);
         current_sound_lump = NULL;
     }
@@ -122,16 +114,14 @@ static dboolean CachePCSLump(int sound_id)
     lumplen = W_LumpLength(S_sfx[sound_id].lumpnum);
 
     // Read header
-  
-    if (current_sound_lump[0] != 0x00 || current_sound_lump[1] != 0x00)
-    {
+
+    if (current_sound_lump[0] != 0x00 || current_sound_lump[1] != 0x00) {
         return false;
     }
 
     headerlen = (current_sound_lump[3] << 8) | current_sound_lump[2];
 
-    if (headerlen > lumplen - 4)
-    {
+    if (headerlen > lumplen - 4) {
         return false;
     }
 
@@ -148,88 +138,73 @@ int I_PCS_StartSound(int id,
                      int vol,
                      int sep,
                      int pitch,
-                     int priority)
-{
+                     int priority) {
     int result;
 
-    if (!pcs_initialised)
-    {
+    if (!pcs_initialised) {
         return -1;
     }
 
-    // These PC speaker sounds are not played - this can be seen in the 
+    // These PC speaker sounds are not played - this can be seen in the
     // Heretic source code, where there are remnants of this left over
     // from Doom.
 
     if (id == sfx_posact || id == sfx_bgact || id == sfx_dmact
-     || id == sfx_dmpain || id == sfx_popain || id == sfx_sawidl)
-    {
+            || id == sfx_dmpain || id == sfx_popain || id == sfx_sawidl) {
         return -1;
     }
 
-    if (SDL_LockMutex(sound_lock) < 0)
-    {
+    if (SDL_LockMutex(sound_lock) < 0) {
         return -1;
     }
 
     result = CachePCSLump(id);
 
-    if (result)
-    {
+    if (result) {
         current_sound_handle = channel;
     }
 
     SDL_UnlockMutex(sound_lock);
 
-    if (result)
-    {
+    if (result) {
         return channel;
     }
-    else
-    {
+    else {
         return -1;
     }
 }
 
-void I_PCS_StopSound(int handle)
-{
-    if (!pcs_initialised)
-    {
+void I_PCS_StopSound(int handle) {
+    if (!pcs_initialised) {
         return;
     }
 
-    if (SDL_LockMutex(sound_lock) < 0)
-    {
+    if (SDL_LockMutex(sound_lock) < 0) {
         return;
     }
 
     // If this is the channel currently playing, immediately end it.
 
-    if (current_sound_handle == handle)
-    {
+    if (current_sound_handle == handle) {
         current_sound_remaining = 0;
     }
-    
+
     SDL_UnlockMutex(sound_lock);
 }
 
-int I_PCS_SoundIsPlaying(int handle)
-{
-    if (!pcs_initialised)
-    {
+int I_PCS_SoundIsPlaying(int handle) {
+    if (!pcs_initialised) {
         return false;
     }
 
-    if (handle != current_sound_handle)
-    {
+    if (handle != current_sound_handle) {
         return false;
     }
 
     return current_sound_lump != NULL && current_sound_remaining > 0;
 }
 
-void I_PCS_InitSound(void)
-{
+void I_PCS_InitSound(void) {
     pcs_initialised = PCSound_Init(PCSCallbackFunc);
 
     sound_lock = SDL_CreateMutex();

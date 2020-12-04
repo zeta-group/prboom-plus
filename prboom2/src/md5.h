@@ -34,9 +34,9 @@
 #define md5byte unsigned char
 
 struct MD5Context {
-        UWORD32 buf[4];
-        UWORD32 bytes[2];
-        UWORD32 in[16];
+    UWORD32 buf[4];
+    UWORD32 bytes[2];
+    UWORD32 in[16];
 };
 
 void MD5Init(struct MD5Context *context);

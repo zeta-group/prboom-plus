@@ -39,12 +39,11 @@
 #include "m_fixed.h"
 
 /* Bounding box coordinate storage. */
-enum
-{
-  BOXTOP,
-  BOXBOTTOM,
-  BOXLEFT,
-  BOXRIGHT
+enum {
+    BOXTOP,
+    BOXBOTTOM,
+    BOXLEFT,
+    BOXRIGHT
 };  /* bbox coordinates */
 
 /* Bounding box functions. */

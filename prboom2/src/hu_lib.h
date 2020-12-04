@@ -59,65 +59,62 @@
 
 /* Text Line widget
  *  (parent of Scrolling Text and Input Text widgets) */
-typedef struct
-{
-  // left-justified position of scrolling text window
-  int   x;
-  int   y;
-  int   w;
-  int   val;
+typedef struct {
+    // left-justified position of scrolling text window
+    int   x;
+    int   y;
+    int   w;
+    int   val;
 
-  const patchnum_t* f;                    // font
-  int   sc;                             // start character
-  //const char *cr;                       //jff 2/16/52 output color range
-  // Proff - Made this an int again. Needed for OpenGL
-  int   cm;                         //jff 2/16/52 output color range
+    const patchnum_t* f;                    // font
+    int   sc;                             // start character
+    //const char *cr;                       //jff 2/16/52 output color range
+    // Proff - Made this an int again. Needed for OpenGL
+    int   cm;                         //jff 2/16/52 output color range
 
-  // killough 1/23/98: Support multiple lines:
-  #define MAXLINES 25
+    // killough 1/23/98: Support multiple lines:
+#define MAXLINES 25
 
-  int   linelen;
-  char  l[HU_MAXLINELENGTH*MAXLINES+1]; // line of text
-  int   len;                            // current line length
+    int   linelen;
+    char  l[HU_MAXLINELENGTH*MAXLINES+1]; // line of text
+    int   len;                            // current line length
 
-  // whether this line needs to be udpated
-  int   needsupdate;
+    // whether this line needs to be udpated
+    int   needsupdate;
 
-  // e6y: wide-res
-  enum patch_translation_e flags;
+    // e6y: wide-res
+    enum patch_translation_e flags;
 } hu_textline_t;
 
 
 
 // Scrolling Text window widget
 //  (child of Text Line widget)
-typedef struct
-{
-  hu_textline_t l[HU_MAXLINES]; // text lines to draw
-  int     h;                    // height in lines
-  int     cl;                   // current line number
+typedef struct {
+    hu_textline_t l[HU_MAXLINES]; // text lines to draw
+    int     h;                    // height in lines
+    int     cl;                   // current line number
 
-  // pointer to dboolean stating whether to update window
-  dboolean*    on;
-  dboolean   laston;             // last value of *->on.
+    // pointer to dboolean stating whether to update window
+    dboolean*    on;
+    dboolean   laston;             // last value of *->on.
 
 } hu_stext_t;
 
 //jff 2/26/98 new widget to display last hud_msg_lines of messages
 // Message refresh window widget
-typedef struct
-{
-  hu_textline_t l[HU_MAXMESSAGES]; // text lines to draw
-  int     nl;                          // height in lines
-  int     nr;                          // total height in rows
-  int     cl;                          // current line number
+typedef struct {
+    hu_textline_t l[HU_MAXMESSAGES]; // text lines to draw
+    int     nl;                          // height in lines
+    int     nr;                          // total height in rows
+    int     cl;                          // current line number
 
-  int x,y,w,h;                         // window position and size
-  const patchnum_t *bg;                  // patches for background
+    int x,y,w,h;                         // window position and size
+    const patchnum_t *bg;                  // patches for background
 
-  // pointer to dboolean stating whether to update window
-  dboolean*    on;
-  dboolean   laston;             // last value of *->on.
+    // pointer to dboolean stating whether to update window
+    dboolean*    on;
+    dboolean   laston;             // last value of *->on.
 
 } hu_mtext_t;
 
@@ -125,16 +122,15 @@ typedef struct
 
 // Input Text Line widget
 //  (child of Text Line widget)
-typedef struct
-{
-  hu_textline_t l;    // text line to input on
+typedef struct {
+    hu_textline_t l;    // text line to input on
 
-  // left margin past which I am not to delete characters
-  int     lm;
+    // left margin past which I am not to delete characters
+    int     lm;
 
-  // pointer to dboolean stating whether to update window
-  dboolean*    on;
-  dboolean   laston;   // last value of *->on;
+    // pointer to dboolean stating whether to update window
+    dboolean*    on;
+    dboolean   laston;   // last value of *->on;
 
 } hu_itext_t;
 
@@ -152,13 +148,13 @@ void HUlib_clearTextLine(hu_textline_t *t);
 
 void HUlib_initTextLine
 (
-  hu_textline_t *t,
-  int x,
-  int y,
-  const patchnum_t *f,
-  int sc,
-  int cm,    //jff 2/16/98 add color range parameter
-  enum patch_translation_e flags
+    hu_textline_t *t,
+    int x,
+    int y,
+    const patchnum_t *f,
+    int sc,
+    int cm,    //jff 2/16/98 add color range parameter
+    enum patch_translation_e flags
 );
 
 // returns success
@@ -199,7 +195,7 @@ void HUlib_eraseSText(hu_stext_t* s);
 //jff 2/26/98 message refresh widget
 // initialize refresh text widget
 void HUlib_initMText(hu_mtext_t *m, int x, int y, int w, int h, const patchnum_t* font,
-         int startchar, int cm, const patchnum_t* bgfont, enum patch_translation_e flags, dboolean *on);
+                     int startchar, int cm, const patchnum_t* bgfont, enum patch_translation_e flags, dboolean *on);
 
 //jff 2/26/98 message refresh widget
 // add a text message to refresh text widget

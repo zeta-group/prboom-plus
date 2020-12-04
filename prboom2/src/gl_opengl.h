@@ -67,14 +67,14 @@
 
 //e6y: OpenGL version
 typedef enum {
-  OPENGL_VERSION_1_0,
-  OPENGL_VERSION_1_1,
-  OPENGL_VERSION_1_2,
-  OPENGL_VERSION_1_3,
-  OPENGL_VERSION_1_4,
-  OPENGL_VERSION_1_5,
-  OPENGL_VERSION_2_0,
-  OPENGL_VERSION_2_1,
+    OPENGL_VERSION_1_0,
+    OPENGL_VERSION_1_1,
+    OPENGL_VERSION_1_2,
+    OPENGL_VERSION_1_3,
+    OPENGL_VERSION_1_4,
+    OPENGL_VERSION_1_5,
+    OPENGL_VERSION_2_0,
+    OPENGL_VERSION_2_1,
 } glversion_t;
 
 extern int gl_version;
@@ -165,7 +165,7 @@ extern PFNGLGETUNIFORMLOCATIONARBPROC       GLEXT_glGetUniformLocationARB;
 extern PFNGLGETACTIVEUNIFORMARBPROC         GLEXT_glGetActiveUniformARB;
 extern PFNGLGETUNIFORMFVARBPROC             GLEXT_glGetUniformfvARB;
 #endif
-  
+
 void gld_InitOpenGL(dboolean compatibility_mode);
 
 //states
@@ -173,18 +173,17 @@ void gld_EnableTexture2D(GLenum texture, int enable);
 void gld_EnableClientCoordArray(GLenum texture, int enable);
 void gld_EnableMultisample(int enable);
 
-typedef enum
-{
-  TMF_MASKBIT = 1,
-  TMF_OPAQUEBIT = 2,
-  TMF_INVERTBIT = 4,
+typedef enum {
+    TMF_MASKBIT = 1,
+    TMF_OPAQUEBIT = 2,
+    TMF_INVERTBIT = 4,
 
-  TM_MODULATE = 0,
-  TM_MASK = TMF_MASKBIT,
-  TM_OPAQUE = TMF_OPAQUEBIT,
-  TM_INVERT = TMF_INVERTBIT,
-  //TM_INVERTMASK = TMF_MASKBIT | TMF_INVERTBIT
-  TM_INVERTOPAQUE = TMF_INVERTBIT | TMF_OPAQUEBIT,
+    TM_MODULATE = 0,
+    TM_MASK = TMF_MASKBIT,
+    TM_OPAQUE = TMF_OPAQUEBIT,
+    TM_INVERT = TMF_INVERTBIT,
+    //TM_INVERTMASK = TMF_MASKBIT | TMF_INVERTBIT
+    TM_INVERTOPAQUE = TMF_INVERTBIT | TMF_OPAQUEBIT,
 } tex_mode_e;
 void SetTextureMode(tex_mode_e type);
 
