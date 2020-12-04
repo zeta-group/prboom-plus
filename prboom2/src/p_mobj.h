@@ -207,7 +207,7 @@
 #define MF_UNUSED2      (uint_64_t)(0x0000000010000000)
 #define MF_UNUSED3      (uint_64_t)(0x0000000020000000)
 
-    // Translucent sprite?                                          // phares
+// Translucent sprite?                                          // phares
 #define MF_TRANSLUCENT  (uint_64_t)(0x0000000040000000)
 
 // this is free            LONGLONG(0x0000000100000000)
@@ -234,8 +234,8 @@
 // (some degree of opaqueness is good, to avoid compatibility woes)
 
 enum {
-  MIF_FALLING = 1,      // Object is falling
-  MIF_ARMED = 2,        // Object is armed (for MF_TOUCHY objects)
+    MIF_FALLING = 1,      // Object is falling
+    MIF_ARMED = 2,        // Object is armed (for MF_TOUCHY objects)
 };
 
 // Map Object definition.
@@ -257,8 +257,7 @@ enum {
 /* cph 2006/08/28 - move Prev[XYZ] fields to the end of the struct. Add any
  * other new fields to the end, and make sure you don't break savegames! */
 
-typedef struct mobj_s
-{
+typedef struct mobj_s {
     // List: thinker links.
     thinker_t           thinker;
 

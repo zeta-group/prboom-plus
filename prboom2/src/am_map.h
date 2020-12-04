@@ -41,15 +41,13 @@
 #include "d_event.h"
 #include "m_misc.h"
 
-typedef struct map_point_s
-{
-  float x, y;
-  unsigned char r, g, b, a;
+typedef struct map_point_s {
+    float x, y;
+    unsigned char r, g, b, a;
 } PACKEDATTR map_point_t;
 
-typedef struct map_line_s
-{
-  map_point_t point[2];
+typedef struct map_line_s {
+    map_point_t point[2];
 } PACKEDATTR map_line_t;
 
 extern array_t map_lines;
@@ -88,19 +86,17 @@ void AM_setMarkParams(int num);
 
 void AM_SetResolution(void);
 
-typedef struct
-{
- fixed_t x,y;
- float fx,fy;
+typedef struct {
+    fixed_t x,y;
+    float fx,fy;
 } mpoint_t;
 
-typedef struct
-{
- fixed_t x, y;
- fixed_t w, h;
+typedef struct {
+    fixed_t x, y;
+    fixed_t w, h;
 
- char label[16];
- int widths[16];
+    char label[16];
+    int widths[16];
 } markpoint_t;
 
 extern markpoint_t *markpoints;
@@ -158,29 +154,27 @@ extern int map_type;
 void M_ChangeMapTextured(void);
 void M_ChangeMapMultisamling(void);
 
-typedef struct am_frame_s
-{
-  fixed_t centerx, centery;
-  fixed_t sin, cos;
+typedef struct am_frame_s {
+    fixed_t centerx, centery;
+    fixed_t sin, cos;
 
-  float centerx_f, centery_f;
-  float sin_f, cos_f;
+    float centerx_f, centery_f;
+    float sin_f, cos_f;
 
-  fixed_t bbox[4];
+    fixed_t bbox[4];
 
-  int precise;
+    int precise;
 } am_frame_t;
 extern am_frame_t am_frame;
 
-typedef enum
-{
-  map_things_appearance_classic,
-  map_things_appearance_scaled,
+typedef enum {
+    map_things_appearance_classic,
+    map_things_appearance_scaled,
 #if defined(HAVE_LIBSDL2_IMAGE) && defined(GL_DOOM)
-  map_things_appearance_icon,
+    map_things_appearance_icon,
 #endif
-  
-  map_things_appearance_max
+
+    map_things_appearance_max
 } map_things_appearance_t;
 extern map_things_appearance_t map_things_appearance;
 extern const char *map_things_appearance_list[];

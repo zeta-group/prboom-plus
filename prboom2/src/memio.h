@@ -29,11 +29,10 @@
 
 typedef struct _MEMFILE MEMFILE;
 
-typedef enum
-{
-  MEM_SEEK_SET,
-  MEM_SEEK_CUR,
-  MEM_SEEK_END,
+typedef enum {
+    MEM_SEEK_SET,
+    MEM_SEEK_CUR,
+    MEM_SEEK_END,
 } mem_rel_t;
 
 MEMFILE *mem_fopen_read(const void *buf, size_t buflen);

@@ -44,11 +44,11 @@ extern dboolean isExtraDDisplay;
 extern int interpolation_maxobjects;
 
 typedef struct {
-  unsigned int start;
-  unsigned int next;
-  unsigned int step;
-  fixed_t frac;
-  float msec;
+    unsigned int start;
+    unsigned int next;
+    unsigned int step;
+    fixed_t frac;
+    float msec;
 } tic_vars_t;
 
 extern tic_vars_t tic_vars;

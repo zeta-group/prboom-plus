@@ -69,11 +69,10 @@ typedef int fixed_t;
 // btw, GCC generates code without nonsenses
 
 #if 0
-inline static CONSTFUNC fixed_t D_abs(fixed_t x)
-{
-  fixed_t _t = (x),_s;
-  _s = _t >> (8*sizeof _t-1);
-  return (_t^_s)-_s;
+inline static CONSTFUNC fixed_t D_abs(fixed_t x) {
+    fixed_t _t = (x),_s;
+    _s = _t >> (8*sizeof _t-1);
+    return (_t^_s)-_s;
 }
 #else
 #define D_abs abs
@@ -87,19 +86,17 @@ inline static CONSTFUNC fixed_t D_abs(fixed_t x)
 /* CPhipps - made __inline__ to inline, as specified in the gcc docs
  * Also made const */
 
-inline static CONSTFUNC fixed_t FixedMul(fixed_t a, fixed_t b)
-{
-  return (fixed_t)((int_64_t) a*b >> FRACBITS);
+inline static CONSTFUNC fixed_t FixedMul(fixed_t a, fixed_t b) {
+    return (fixed_t)((int_64_t) a*b >> FRACBITS);
 }
 
 /*
  * Fixed Point Division
  */
 
-static CONSTFUNC fixed_t FixedDiv(fixed_t a, fixed_t b)
-{
-  return (D_abs(a)>>14) >= D_abs(b) ? ((a^b)>>31) ^ INT_MAX :
-    (fixed_t)(((int_64_t) a << FRACBITS) / b);
+static CONSTFUNC fixed_t FixedDiv(fixed_t a, fixed_t b) {
+    return (D_abs(a)>>14) >= D_abs(b) ? ((a^b)>>31) ^ INT_MAX :
+           (fixed_t)(((int_64_t) a << FRACBITS) / b);
 }
 
 /* CPhipps -
@@ -107,18 +104,18 @@ static CONSTFUNC fixed_t FixedDiv(fixed_t a, fixed_t b)
  * (notice that the C standard for % does not guarantee this)
  */
 
-inline static CONSTFUNC fixed_t FixedMod(fixed_t a, fixed_t b)
-{
-  if (b & (b-1)) {
-    fixed_t r = a % b;
-    return ((r<0) ? r+b : r);
-  } else
-    return (a & (b-1));
+inline static CONSTFUNC fixed_t FixedMod(fixed_t a, fixed_t b) {
+    if (b & (b-1)) {
+        fixed_t r = a % b;
+        return ((r<0) ? r+b : r);
+    }
+    else {
+        return (a & (b-1));
+    }
 }
 
-static CONSTFUNC fixed_t Scale(fixed_t a, fixed_t b, fixed_t c)
-{
-	return (fixed_t)(((int_64_t)a*b)/c);
+static CONSTFUNC fixed_t Scale(fixed_t a, fixed_t b, fixed_t c) {
+    return (fixed_t)(((int_64_t)a*b)/c);
 }
 
 #endif

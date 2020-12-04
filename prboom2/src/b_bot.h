@@ -42,60 +42,61 @@
 
 // D_PRBot_Wander sidestepping factor
 typedef enum {
-  BMF_NOFORWARD   = 1,
-  BMF_NOBACKWARD  = 2,
-  BMF_NOSIDES     = 4,
-  BMF_NOTURN      = 8
+    BMF_NOFORWARD   = 1,
+    BMF_NOBACKWARD  = 2,
+    BMF_NOSIDES     = 4,
+    BMF_NOTURN      = 8
 } botmoveflags_t;
 
 typedef enum {
-  SSTP_NONE     = 0,
-  SSTP_LITTLE   = 51,
-  SSTP_SOME     = 76,
-  SSTP_MODERATE = 102,
-  SSTP_MORE     = 153,
-  SSTP_LOTS     = 204,
-  SSTP_ALL      = 255,
+    SSTP_NONE     = 0,
+    SSTP_LITTLE   = 51,
+    SSTP_SOME     = 76,
+    SSTP_MODERATE = 102,
+    SSTP_MORE     = 153,
+    SSTP_LOTS     = 204,
+    SSTP_ALL      = 255,
 } sidesteppiness_t;
 
 // Current state of a bot's mind
 typedef enum {
-  BST_NONE,       // no bot here!
-  BST_PREINIT,    // waiting for mobj initialization
-  BST_LOOK,       // look around the map for something to do
-  BST_HUNT,       // hunt down an enemy (equivalent to BST_LOOK in coop)
-  BST_RETREAT,    // retreat from action
-  BST_KILL,       // kill enemy
-  BST_CAUTIOUS,   // avoid projectiles and/or damaging sectors while only attacking immediate
-  BST_LEAVE,      // exit damaging sector
-  BST_DEAD,       // dead, no-op
+    BST_NONE,       // no bot here!
+    BST_PREINIT,    // waiting for mobj initialization
+    BST_LOOK,       // look around the map for something to do
+    BST_HUNT,       // hunt down an enemy (equivalent to BST_LOOK in coop)
+    BST_RETREAT,    // retreat from action
+    BST_KILL,       // kill enemy
+    BST_CAUTIOUS,   // avoid projectiles and/or damaging sectors while only attacking immediate
+    BST_LEAVE,      // exit damaging sector
+    BST_DEAD,       // dead, no-op
 } botstate_t;
 
 
 // A PRBot.
 typedef struct {
-  // basic elements
-  player_t *player; // player represented
-  mobj_t *mobj;     // player object
-  int playernum;    // self-explanatory
-  int gametics;     // tic counter
-  
-  // AI
-  mobj_t *enemy;    // for monsters or other players
-  mobj_t *want;     // for items
-  mobj_t *avoid;    // for damaging things or dangerously big monsters
-  int lastheight;   // height changes make you slightly less boring. Staircases ahoy!
-  int movement;     // movement flags set by routines like D_PRBot_Wander
-  int exploration;  // added to when enemies killed, secrets found, or special linedefs activated; decremented every 4 tics
-                    // (if too low, start shooting at linedefs with special != 0, and BST_LOOKing around more frantically)
+    // basic elements
+    player_t *player; // player represented
+    mobj_t *mobj;     // player object
+    ticcmd_t *cmd;    // input struct pointer (should point to netcmds)
+    int playernum;    // self-explanatory
+    int gametics;     // tic counter
 
-  // state machine
-  botstate_t state; // bot state
-  int stcounter;    // counter for some states
-  int stvalue;      // value used by some states
+    // AI
+    mobj_t *enemy;    // for monsters or other players
+    mobj_t *want;     // for items
+    mobj_t *avoid;    // for damaging things or dangerously big monsters
+    int lastheight;   // height changes make you slightly less boring. Staircases ahoy!
+    int movement;     // movement flags set by routines like D_PRBot_Wander
+    int exploration;  // added to when enemies killed, secrets found, or special linedefs activated; decremented every 4 tics
+    // (if too low, start shooting at linedefs with special != 0, and BST_LOOKing around more frantically)
 
-  int lastseenx;
-  int lastseeny;    // last seen coordinates of enemy (BST_HUNT)
+    // state machine
+    botstate_t state; // bot state
+    int stcounter;    // counter for some states
+    int stvalue;      // value used by some states
+
+    int lastseenx;
+    int lastseeny;    // last seen coordinates of enemy (BST_HUNT)
 } mbot_t;
 
 extern mbot_t bots[MAXPLAYERS];
@@ -112,7 +113,7 @@ dboolean D_PRBot_LookToward(mbot_t *bot, int x, int y);
 dboolean D_PRBot_LookAt(mbot_t *bot, mobj_t *lookee);
 
 void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
-inline void D_PRBot_Move(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
+void D_PRBot_Move(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
 
 void D_PRBotTic_Live(mbot_t *bot);
 void D_PRBotTic_Look(mbot_t *bot);
