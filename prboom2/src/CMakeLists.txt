@@ -31,6 +31,8 @@ set(COMMON_SRC
     d_player.h
     d_think.h
     d_ticcmd.h
+    b_bot.c
+    b_bot.h
     e6y.c
     e6y.h
     f_finale.c
