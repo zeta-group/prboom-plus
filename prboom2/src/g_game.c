@@ -1265,6 +1265,7 @@ void G_Ticker (void)
       P_WalkTicker();
       mlooky = 0;
       AM_Ticker();
+      B_Ticker ();
       ST_Ticker ();
       HU_Ticker ();
       break;

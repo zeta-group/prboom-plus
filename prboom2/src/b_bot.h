@@ -27,7 +27,7 @@
  *  02111-1307, USA.
  *
  * DESCRIPTION:
- *  PRBots, the routine (D_PRBotTic) that runs every tic if
+ *  PRBots, the routine (B_State) that runs every tic if
  *  -bot is supplied in the terminal.
  *
  *-----------------------------------------------------------------------------
@@ -40,7 +40,7 @@
 
 
 
-// D_PRBot_Wander sidestepping factor
+// B_Action_Wander sidestepping factor
 typedef enum {
     BMF_NOFORWARD   = 1,
     BMF_NOBACKWARD  = 2,
@@ -86,7 +86,7 @@ typedef struct {
     mobj_t *want;     // for items
     mobj_t *avoid;    // for damaging things or dangerously big monsters
     int lastheight;   // height changes make you slightly less boring. Staircases ahoy!
-    int movement;     // movement flags set by routines like D_PRBot_Wander
+    int movement;     // movement flags set by routines like B_Action_Wander
     int exploration;  // added to when enemies killed, secrets found, or special linedefs activated; decremented every 4 tics
     // (if too low, start shooting at linedefs with special != 0, and BST_LOOKing around more frantically)
 
@@ -101,26 +101,26 @@ typedef struct {
 
 extern mbot_t bots[MAXPLAYERS];
 
-void D_PRBotClear(mbot_t *mbot);
-void D_PRBotCallInit(mbot_t *mbot, int playernum);
-void D_PRBotDeinit(mbot_t *mbot);
-static void D_PRBot_SetState(mbot_t *bot, botstate_t state);
+void B_Clear(mbot_t *mbot);
+void B_CallInit(mbot_t *mbot, int playernum);
+void B_Deinit(mbot_t *mbot);
+static void B_Action_SetState(mbot_t *bot, botstate_t state);
 
-mbot_t *D_PRBotReplace(int playernum);  // dawns a bot unto an exising player
-mbot_t *D_PRBotSpawn(void);             // spawns a bot to the game
+mbot_t *B_Replace(int playernum);  // dawns a bot unto an exising player
+mbot_t *B_Spawn(void);             // spawns a bot to the game
 
-dboolean D_PRBot_LookToward(mbot_t *bot, int x, int y);
-dboolean D_PRBot_LookAt(mbot_t *bot, mobj_t *lookee);
+dboolean B_Action_LookToward(mbot_t *bot, int x, int y);
+dboolean B_Action_LookAt(mbot_t *bot, mobj_t *lookee);
 
-void D_PRBot_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
-void D_PRBot_Move(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
+void B_Action_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
+void B_Action_Move(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags);
 
-void D_PRBotTic_Live(mbot_t *bot);
-void D_PRBotTic_Look(mbot_t *bot);
-void D_PRBotTic_Retreat(mbot_t *bot);
-void D_PRBotTic_Cautious(mbot_t *bot);
-void D_PRBotTic_Hunt(mbot_t *bot);
-void D_PRBotTic_Kill(mbot_t *bot);
-void D_PRBotTic_Leave(mbot_t *bot);
+void B_State_Live(mbot_t *bot);
+void B_State_Look(mbot_t *bot);
+void B_State_Retreat(mbot_t *bot);
+void B_State_Cautious(mbot_t *bot);
+void B_State_Hunt(mbot_t *bot);
+void B_State_Kill(mbot_t *bot);
+void B_State_Leave(mbot_t *bot);
 
-void P_PRBot_Ticker(void);
+void B_Ticker(void);
