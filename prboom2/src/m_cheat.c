@@ -96,6 +96,7 @@ static void cheat_notarget();
 static void cheat_fly();
 static void cheat_comp_ext();
 static void cheat_shorttics();
+static void cheat_prbots();
 
 //-----------------------------------------------------------------------------
 //
@@ -198,11 +199,28 @@ cheatseq_t cheat[] = {
   // Enable/disable shorttics in-game
   CHEAT("tntshort",   NULL,               cht_never, cheat_shorttics, 0),
 
+  CHEAT("prbots",     NULL,               not_demo, cheat_prbots, -1),
+
   // end-of-list marker
   {NULL}
 };
 
 //-----------------------------------------------------------------------------
+
+#include "b_bot.h"
+
+static void cheat_prbots(buf)
+char buf[2];
+{
+    // add N PRBots
+
+    if (!isdigit(buf[0]))
+        return;
+
+    while (buf[0]-- > '0') {
+        B_Spawn();
+    }
+}
 
 static void cheat_mus(buf)
 char buf[3];

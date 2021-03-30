@@ -33,6 +33,10 @@
  *-----------------------------------------------------------------------------
  */
 
+#ifndef HEADER_B_BOT
+#define HEADER_B_BOT
+
+
 #define BOTDEBUG
 
 #include "p_mobj.h"
@@ -97,17 +101,26 @@ typedef struct {
 
     int lastseenx;
     int lastseeny;    // last seen coordinates of enemy (BST_HUNT)
+
+    int lastgametic;  // last gametic of B_TickBot
 } mbot_t;
 
 extern mbot_t bots[MAXPLAYERS];
 
+/// Multiply per-tick aiming noise when aiming on target (1.0 is 45 degrees)
+extern double bot_aim_noise;
+
+/// Delay between bot death and respawn, in netgames (including solo-net).
+extern int respawn_delay;
+
 void B_Clear(mbot_t *mbot);
 void B_CallInit(mbot_t *mbot, int playernum);
 void B_Deinit(mbot_t *mbot);
-static void B_Action_SetState(mbot_t *bot, botstate_t state);
+static void B_SetState(mbot_t *bot, botstate_t state);
 
 mbot_t *B_Replace(int playernum);  // dawns a bot unto an exising player
 mbot_t *B_Spawn(void);             // spawns a bot to the game
+void B_KillAll(void);           // remove all bots from the game
 
 dboolean B_Action_LookToward(mbot_t *bot, int x, int y);
 dboolean B_Action_LookAt(mbot_t *bot, mobj_t *lookee);
@@ -124,3 +137,6 @@ void B_State_Kill(mbot_t *bot);
 void B_State_Leave(mbot_t *bot);
 
 void B_Ticker(void);
+
+
+#endif // HEADER_B_BOT

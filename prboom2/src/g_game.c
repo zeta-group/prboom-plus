@@ -49,6 +49,7 @@
 #include "config.h"
 #endif
 
+#include "b_bot.h"
 #include "doomstat.h"
 #include "d_net.h"
 #include "f_finale.h"
@@ -1076,6 +1077,10 @@ dboolean G_Responder (event_t* ev)
 // Make ticcmd_ts for the players.
 //
 
+#include "b_bot.h"
+
+extern mbot_t bots[MAXPLAYERS];
+
 void G_Ticker (void)
 {
   int i;
@@ -1106,6 +1111,8 @@ void G_Ticker (void)
     // force players to be initialized on level reload
     for (i=0 ; i<MAXPLAYERS ; i++)
       players[i].playerstate = PST_REBORN;
+    // reset all PrBots' states
+    B_KillAll();
           G_DoLoadLevel ();
           break;
         case ga_newgame:
@@ -1164,7 +1171,7 @@ void G_Ticker (void)
           // killough 2/14/98, 2/20/98 -- only warn in netgames and demos
 
           if ((netgame || demoplayback) && cmd->forwardmove > TURBOTHRESHOLD &&
-              !(gametic&31) && ((gametic>>5)&3) == i )
+              !(gametic&31) && ((gametic>>5)&3) == i && bots[i].state == BST_NONE)
             {
         extern char *player_names[];
         /* cph - don't use sprintf, use doom_printf */
@@ -1174,7 +1181,7 @@ void G_Ticker (void)
           if (netgame && !netdemo && !(gametic%ticdup) )
             {
               if (gametic > BACKUPTICS
-                  && consistancy[i][buf] != cmd->consistancy)
+                  && consistancy[i][buf] != cmd->consistancy && bots[i].state == BST_NONE)
                 I_Error("G_Ticker: Consistency failure (%i should be %i)",
             cmd->consistancy, consistancy[i][buf]);
               if (players[i].mo)
@@ -2943,6 +2950,8 @@ void G_InitNew(skill_t skill, int episode, int map)
   // force players to be initialized upon first level load
   for (i=0 ; i<MAXPLAYERS ; i++)
     players[i].playerstate = PST_REBORN;
+
+  B_KillAll();
 
   usergame = true;                // will be set false if a demo
   paused = false;

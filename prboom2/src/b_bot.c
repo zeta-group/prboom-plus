@@ -27,7 +27,7 @@
  *  02111-1307, USA.
  *
  * DESCRIPTION:
- *  PRBots, the routine (B_Tic) that runs every tic if
+ *  PRBots, the routine (B_TickBot) that runs every tic if
  *  -bot is supplied in the terminal.
  *
  *-----------------------------------------------------------------------------
@@ -71,7 +71,76 @@ mbot_t bots[MAXPLAYERS];
 
 static void B_PrintState(mbot_t *bot);
 static void B_NextState(mbot_t *bot);
+static short bot_consistancy[MAXPLAYERS][BACKUPTICS];
 void B_CheckInits(void);
+
+// Inquire a change of bot states.
+static const char *B_GetStateName(mbot_t *bot) {
+    const char *st;
+
+    switch (bot->state) {
+    case BST_PREINIT:
+        st = (const char *)"BST_PREINIT";
+        break;
+    case BST_RETREAT:
+        st = (const char *)"BST_RETREAT";
+        break;
+    case BST_KILL:
+        st = (const char *)"BST_KILL";
+        break;
+    case BST_DEAD:
+        st = (const char *)"BST_DEAD";
+        break;
+    case BST_HUNT:
+        st = (const char *)"BST_HUNT";
+        break;
+    case BST_LEAVE:
+        st = (const char *)"BST_LEAVE";
+        break;
+    case BST_LOOK:
+        st = (const char *)"BST_LOOK";
+        break;
+    case BST_CAUTIOUS:
+        st = (const char *)"BST_CAUTIOUS";
+        break;
+    case BST_NONE:
+        st = (const char *)"(none)";
+        break;
+    default:
+        st = (const char *)"(unknown)";
+        break;
+    }
+
+    return st;
+}
+
+static void B_PrintState(mbot_t *bot) {
+    DEBUGPRINT("B_NextState: bot #%d is in state %s\n", bot->playernum + 1, B_GetStateName(bot));
+}
+
+static void B_SetState(mbot_t *bot, botstate_t state) {
+    if (bot->player && bot->state == state) {
+        return;
+    }
+
+    bot->state = state;
+    bot->stcounter = 0;
+
+    if (bot->player) {
+        ticcmd_t *cmd = &bot->cmd[maketic % BACKUPTICS];
+
+        if (cmd) {
+            cmd->buttons &= ~(BT_USE | BT_ATTACK);
+            cmd->sidemove = 0;
+            cmd->forwardmove = 0;
+            cmd->angleturn = 0;
+        }
+
+#ifdef BOTDEBUG
+        B_PrintState(bot);
+#endif
+    }
+}
 
 // copied from p_enemy.c. Why static?!
 static dboolean P_IsVisible(mobj_t *actor, mobj_t *mo, dboolean allaround) {
@@ -130,26 +199,37 @@ void B_CallInit(mbot_t *mbot, int playernum) {
 
     mbot->stcounter = 0;
     mbot->stvalue = 0;
+    mbot->lastgametic = gametic;
 
     mbot->player = &players[playernum];
     mbot->playernum = playernum; // though it should be the same index for bots lol
-    mbot->mobj = NULL;
+    mbot->mobj = mbot->player->mo;
 }
 
 static void B_DoInit(mbot_t *mbot) {
     B_Clear(mbot); // call a 2nd time to change BST_PREINIT to BST_LOOK
 
-    mbot->mobj = players[mbot->playernum].mo;
-    mbot->cmd = &mbot->player->cmd; // (ticcmd_t *) netcmds[mbot->playernum];
+    ticcmd_t *cmd = netcmds[mbot->playernum];
+
+    mbot->mobj = mbot->player->mo;
+    mbot->cmd = cmd;
 
     if (!deathmatch) {
         mbot->mobj->flags |= MF_FRIEND;    // happy little coop friends
     }
 
     // spawn teleport fog and make its noise thing
+    P_MapStart();
     S_StartSound(P_SpawnMobj(mbot->mobj->x, mbot->mobj->y, mbot->mobj->z, MT_TFOG), sfx_telept);
+    P_MapEnd();
 
     B_NextState(mbot);
+
+    // reset consistency check
+    int buf = (gametic/ticdup)%BACKUPTICS;
+
+    cmd->consistancy = bot_consistancy[mbot->playernum][buf];
+    bot_consistancy[mbot->playernum][buf] = mbot->player->mo->x;
 }
 
 // Replaces an existing player with a PRBot (does not change the player's state, e.g. ammo, location, etc)
@@ -177,6 +257,12 @@ mbot_t *B_Replace(int playernum) {
 void B_Deinit(mbot_t *mbot) {
     DEBUGPRINT("B_Deinit: Removed bot #%d from the game.\n", mbot->playernum + 1);
 
+    // reset consistancy checks to zero
+    for (int i = 0; i < BACKUPTICS; i++) {
+        bot_consistancy[mbot->playernum][i] = 0;
+    }
+
+    // reset state of playernum
     playeringame[mbot->playernum] = false;
 
     mbot->player = NULL;
@@ -188,41 +274,68 @@ void B_Deinit(mbot_t *mbot) {
     B_SetState(mbot, BST_NONE);
 }
 
+void B_KillAll(void) {
+    for (int i = 0; i < MAXPLAYERS; i++) {
+        if (bots[i].state != BST_PREINIT && bots[i].state != BST_NONE) {
+            assert(bots[i].player && "Player already unset in ticked bot!");
+            assert(bots[i].mobj && "Mobj already unset in ticked bot!");
+
+            B_Deinit(&bots[i]);
+        }
+    }
+}
+
 mbot_t *B_Spawn(void) {
     // spawns a bot to the game
     int next_player = 0;
     player_t *player;
 
     while (next_player < MAXPLAYERS) {
-        if (playeringame[next_player]) {
+        // don't take singleplayer slot
+        if (!netgame && next_player == 0) {
             next_player++;
             continue;
         }
 
-        // I think there is a specific function in the PRBoom+ code
-        // that does this that I have to call instead (not I_Error),
-        // but I don't recall which one right now.
+        // don't take occupied slots
+        if (playeringame[next_player] && (netgame || players[next_player].playerstate != PST_DEAD)) {
+            next_player++;
+            continue;
+        }
+
         DEBUGPRINT("B_Spawn: spawned new PRBot at player start #%d\n", next_player + 1);
 
         player = &players[next_player];
+
+        if (!netgame && players[next_player].playerstate == PST_DEAD) {
+            // reset state from last death
+            players[next_player].mo->player = NULL;
+            players[next_player].playerstate = PST_REBORN;
+            players[next_player].mo = NULL;
+        }
+
         playeringame[next_player] = true;
 
-        // spawn player
+        // spawn player into map
+        P_MapStart();
         P_SpawnPlayer(next_player, &playerstarts[next_player]);
+        P_MapEnd();
 
-
+        // initialize corresponding bot
         B_CallInit(&bots[next_player], next_player);
 
-        break;
+        return &bots[next_player];
     }
 
     return NULL; // couldn't spawn bot; not enough player slots!
 }
 
+int respawn_delay = 20;
+
 static inline void B_SanitizeState(mbot_t *bot) {
     if (bot->mobj->health <= 0) {
         if (bot->player->playerstate == PST_DEAD && bot->state != BST_DEAD) {
-            bot->stcounter = 20;
+            bot->stcounter = respawn_delay;
             B_SetState(bot, BST_DEAD);
         }
         return;
@@ -263,6 +376,10 @@ static mbot_t *current_bot;
 static dboolean PIT_FindBotTarget(mobj_t *mo) {
     mobj_t *actor = current_actor;
     mbot_t *bot = current_bot;
+
+    if (mo == current_bot->mobj) {
+        return true; // can't target self, duh
+    }
 
     if (!(
                 (
@@ -307,7 +424,7 @@ static dboolean PIT_FindBotTarget(mobj_t *mo) {
     return false;
 }
 
-static mobj_t *B_LookFind(mbot_t *bot) {
+static dboolean B_LookFind(mbot_t *bot) {
     mobj_t *actor = bot->mobj;
 
     thinker_t *th;
@@ -315,7 +432,7 @@ static mobj_t *B_LookFind(mbot_t *bot) {
 
     // Search for new enemy
     if (cap->cnext == cap) {
-        return NULL;    // Empty list? bail out early
+        return false;    // Empty list? bail out early
     }
 
     {
@@ -328,7 +445,7 @@ static mobj_t *B_LookFind(mbot_t *bot) {
 
         // Search first in the immediate vicinity.
         if (!P_BlockThingsIterator(x, y, PIT_FindBotTarget)) {
-            return current_actor;
+            return true;
         }
 
         for (d = 1; d < 5; d++) {
@@ -336,13 +453,13 @@ static mobj_t *B_LookFind(mbot_t *bot) {
             do
                 if (!P_BlockThingsIterator(x + i, y - d, PIT_FindBotTarget) ||
                         !P_BlockThingsIterator(x + i, y + d, PIT_FindBotTarget)) {
-                    return current_actor;
+                    return true;
                 }
             while (++i < d);
             do
                 if (!P_BlockThingsIterator(x - d, y + i, PIT_FindBotTarget) ||
                         !P_BlockThingsIterator(x + d, y + i, PIT_FindBotTarget)) {
-                    return current_actor;
+                    return true;
                 }
             while (--i + d >= 0);
         }
@@ -363,16 +480,18 @@ static mobj_t *B_LookFind(mbot_t *bot) {
                 }
 
                 else if (!PIT_FindBotTarget((mobj_t *)th)) { // If target sighted
-                    return current_actor;
+                    return true;
                 }
         }
     }
 
-    return NULL;
+    return false;
 }
 
-#define MAXAIMOFFS (10 * (ANG1))
-#define TOAIMOFFS(a) ((a) / ANG1 * MAXAIMOFFS)
+#define TOAIMOFFS(a) ((long)(a)>>16)
+#define ASAIM(a) ((long)(a * ANG1)>>16)
+
+double bot_aim_noise = 0.3;
 
 // Aims a bot toward its target.
 // Returns whether it thinks it has aimed
@@ -384,38 +503,48 @@ dboolean B_Action_LookToward(mbot_t *bot, int x, int y) {
     angle_t ang_curr = bot->mobj->angle;
 
     // check for unsigned wrap-arounds
-    angle_t ang_diff = (ang_targ >= ang_curr ? ang_targ - ang_curr : ang_curr - ang_targ); // absolute          (indirected)
-    int ang_delta = (ang_targ >= ang_curr ? ang_diff : -ang_diff);                         // from curr to targ (directed)
+    angle_t ang_diff = (ang_targ - ang_curr);
+    ang_diff = (ang_diff < ANG180 ? ang_diff : ang_diff - ANG180);
 
-    if (ang_diff > ANG45) {
+    int ang_delta = (ang_targ >= ang_curr ? ang_diff : -ang_diff); // from curr to targ (signed, directed)
+
+    int precise = ang_diff <= ANG45 / 2;
+
+    if (!precise) {
         // turn toward
         if (ang_delta > 0) { // targ - curr > 0; therefore, n > 0, where curr + n = targ
-            cmd->angleturn += 3.5;
+            cmd->angleturn = ASAIM(30.0);
         }
 
         else { // targ - curr < 0; therefore, n < 0, where curr + n = targ
-            cmd->angleturn -= 3.5;
+            cmd->angleturn = -ASAIM(30.0);
         }
     }
 
     else {
         // adjust slightly (with 'realistic' aiming errors)
 
-        int aim_amount = ang_diff * 0.8;
+        int aim_amount = (int) (ang_delta * 0.8) >> 16;
 
         // calculate aiming errors
         {
             // get random byte
-            int turn_offs = P_Random(pr_bot);
+            int turn_offs = P_Random(pr_bot) & 0xFF;
 
             // convert byte to scaled proper angle measure and add to aim amount
-            aim_amount += TOAIMOFFS(turn_offs * (ANG45 / 255) - ANG45 / 2);
+            turn_offs = (int) ((turn_offs * ANG45 / 255 - ANG45 / 2) * bot_aim_noise) >> 16;
+
+            //printf("Aim adjust %f, noise %f\n", (double)(aim_amount << 16) / ANG1, (double)(turn_offs << 16) / ANG1);
+            
+            aim_amount += turn_offs;
         }
 
-        cmd->angleturn += aim_amount;
+        cmd->angleturn = aim_amount;
     }
 
-    return ang_diff <= ANG45;
+    //printf("Angle diff %f, from %f to %f, width %f, move %f, noisy adjust is %s\n", (double)ang_delta / ANG1, (double)ang_curr / ANG1, (double)ang_targ / ANG1, (double) ang_diff / ANG1, (double) (cmd->angleturn << 16) / ANG1, precise ? "true" : "false");
+
+    return precise;
 }
 
 dboolean B_Action_LookAt(mbot_t *bot, mobj_t *lookee) {
@@ -427,76 +556,12 @@ dboolean B_Action_LookAt(mbot_t *bot, mobj_t *lookee) {
 static void B_Action_KillOrRetreat(mbot_t *bot) {
     mobj_t *targ = bot->enemy;
 
-    if (bot->enemy->health > bot->mobj->health * (bot->enemy->target == bot->mobj ? 2 : 3)) {
+    if (bot->enemy != NULL && bot->enemy->health > bot->mobj->health * (bot->enemy->target == bot->mobj ? 2 : 3)) {
         B_SetState(bot, BST_RETREAT);
     }
 
     else {
         B_SetState(bot, BST_KILL);
-    }
-}
-
-// Inquire a change of bot states.
-static const char *B_GetStateName(mbot_t *bot) {
-    const char *st;
-
-    switch (bot->state) {
-    case BST_PREINIT:
-        st = (const char *)"BST_PREINIT";
-        break;
-    case BST_RETREAT:
-        st = (const char *)"BST_RETREAT";
-        break;
-    case BST_KILL:
-        st = (const char *)"BST_KILL";
-        break;
-    case BST_DEAD:
-        st = (const char *)"BST_DEAD";
-        break;
-    case BST_HUNT:
-        st = (const char *)"BST_HUNT";
-        break;
-    case BST_LEAVE:
-        st = (const char *)"BST_LEAVE";
-        break;
-    case BST_LOOK:
-        st = (const char *)"BST_LOOK";
-        break;
-    case BST_CAUTIOUS:
-        st = (const char *)"BST_CAUTIOUS";
-        break;
-    case BST_NONE:
-        st = (const char *)"(none)";
-        break;
-    default:
-        st = (const char *)"(unknown)";
-        break;
-    }
-
-    return st;
-}
-
-static void B_PrintState(mbot_t *bot) {
-    DEBUGPRINT("B_NextState: bot #%d is in state %s\n", bot->playernum + 1, B_GetStateName(bot));
-}
-
-static void B_SetState(mbot_t *bot, botstate_t state) {
-    if (bot->player && bot->state == state) {
-        return;
-    }
-
-    bot->state = state;
-    bot->stcounter = 0;
-
-    if (bot->player) {
-        bot->player->cmd.buttons &= ~(BT_USE | BT_ATTACK);
-        bot->player->cmd.sidemove = 0;
-        bot->player->cmd.forwardmove = 0;
-        bot->player->cmd.angleturn = 0;
-
-#ifdef BOTDEBUG
-        B_PrintState(bot);
-#endif
     }
 }
 
@@ -541,8 +606,8 @@ static void B_NextState(mbot_t *bot) {
 
     bot->enemy = NULL; // no grudges.
 
-    if ((bot->enemy = B_LookFind(bot))) {
-        B_KillOrRetreat(bot);
+    if (B_LookFind(bot)) {
+        B_Action_KillOrRetreat(bot);
     }
 
     else if (bot->avoid && P_IsVisible(bot->mobj, bot->avoid, true)) {
@@ -564,11 +629,12 @@ static void B_NextState(mbot_t *bot) {
 void B_Action_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy, botmoveflags_t moveflags) {
     dboolean turn_anyway;
     ticcmd_t *cmd = &bot->cmd[maketic % BACKUPTICS];
-    sidesteppiness_t straightsteppy = (200 - sidesteppy / 2);
+    sidesteppy = (int) sidesteppy * 32 / 256;
+    sidesteppiness_t straightsteppy = (32 - sidesteppy / 2);
 
-    if (straightsteppy < 20) {
-        straightsteppy = 20;    // at least some, c'mon!
-    }
+    /*if (straightsteppy < 3) {
+        straightsteppy = 3;    // at least some, c'mon!
+    }*/
 
     if (bot->stcounter == 0) {
         bot->stcounter = -10 - P_Random(pr_bot) / 80;
@@ -605,16 +671,12 @@ void B_Action_Wander(mbot_t *bot, int turn_density, sidesteppiness_t sidesteppy,
             int movement = bot->stvalue & 0xE >> 1;
 
             if (movement & 4) {
-                if (movement & 1) {
-                    if (!(moveflags & BMF_NOSIDES)) {
-                        cmd->sidemove += sidesteppy * 3;
-                    }
+                if (movement & 1 && !(moveflags & BMF_NOSIDES)) {
+                    cmd->sidemove += sidesteppy * 3;
                 }
 
                 else {
-                    if (!(moveflags & BMF_NOSIDES)) {
-                        cmd->sidemove -= sidesteppy * 3;
-                    }
+                    cmd->sidemove -= sidesteppy * 3;
                 }
             }
 
@@ -694,14 +756,18 @@ inline void B_State_Look(mbot_t *bot) {
             cmd->buttons &= ~(BT_USE | BT_ATTACK);
 
             if (!(cmd->buttons & BT_USE) && !(bot->gametics & 0x7) && P_Random(pr_bot) < 128) {
-                cmd->buttons |= BT_USE | (P_Random(pr_bot) < 30 ? BT_ATTACK : 0);    // OOMPH OOMPH OOMPH BANG
+                cmd->buttons |= BT_USE;
+            }
+
+            else {
+                cmd->buttons &= ~BT_USE;
             }
         }
     }
 }
 
 inline void B_State_Retreat(mbot_t *bot) {
-    if (bot->enemy->health <= 0 || bot->enemy->flags & MTF_FRIEND || bot->enemy->target != bot->mobj || !P_IsVisible(bot->mobj, bot->enemy, true)) {
+    if (bot->enemy == NULL || bot->enemy->health <= 0 || bot->enemy->flags & MTF_FRIEND || bot->enemy->target != bot->mobj || !P_IsVisible(bot->mobj, bot->enemy, true)) {
         D_SetMObj(&bot->enemy, NULL);
 
         B_NextState(bot);
@@ -798,8 +864,13 @@ void B_State_Hunt(mbot_t *bot) {
 void B_State_Kill(mbot_t *bot) {
     int vis;
 
+    ticcmd_t *cmd = &bot->cmd[maketic % BACKUPTICS];
+
+    cmd->buttons &= ~BT_ATTACK;
+
     if (bot->enemy == NULL) {
         B_NextState(bot); // find someone, nelly!
+        return;
     }
 
     vis = P_IsVisible(bot->mobj, bot->enemy, true);
@@ -812,23 +883,19 @@ void B_State_Kill(mbot_t *bot) {
     if (bot->enemy->health <= 0 || bot->enemy->flags & MTF_FRIEND || (!vis && !deathmatch)) {
         D_SetMObj(&bot->enemy, NULL);
 
-        bot->player->cmd.buttons &= ~BT_ATTACK;
-
         B_NextState(bot);
     }
 
     else if (!vis /* deathmatch implied because condition above failed */) {
-        bot->player->cmd.buttons &= ~BT_ATTACK;
         B_SetState(bot, BST_HUNT);
     }
 
-    else if (bot->enemy->health > bot->mobj->health * 2 && bot->enemy->target == bot->mobj) {
-        bot->player->cmd.buttons &= ~BT_ATTACK;
+    else if (bot->enemy != NULL && bot->enemy->health > bot->mobj->health * 2 && bot->enemy->target == bot->mobj) {
         B_SetState(bot, BST_RETREAT);
     }
 
     else if (B_Action_LookAt(bot, bot->enemy)) {
-        bot->player->cmd.buttons |= BT_ATTACK;
+        cmd->buttons |= BT_ATTACK;
         B_Action_Move(bot, 2, SSTP_SOME, BMF_NOFORWARD | BMF_NOTURN);
     }
 
@@ -843,21 +910,35 @@ void B_DoReborn(mbot_t *bot) {
     if (!netgame) {
         // forget about this bot
         B_Deinit(bot);
+        return;
     }
+    
+    // respawn and reinitialize bot
+    playeringame[bot->playernum] = true;
 
-    else {
-        // respawn and reinitialize bot
-        bot->player->playerstate = PST_REBORN;
-        B_Clear(bot);
-        G_DoReborn(bot->playernum);
-    }
+    P_MapStart();
+    G_DoReborn(bot->playernum);
+    P_MapEnd();
+
+    B_DoInit(bot);
 }
 
-void B_Tic(mbot_t *bot) {
+void B_TickBot(mbot_t *bot) {
+    if (!playeringame[bot->playernum]) {
+        return;
+    }
+
     assert(bot->mobj != NULL && "tried to tic bot with mbot_t::mobj not set");
     assert(bot->player != NULL && "tried to tic bot with mbot_t::player not set");
 
-    // add consistency setters?
+    ticcmd_t *cmd = &bot->cmd[maketic % BACKUPTICS];
+
+    int buf = (gametic/ticdup)%BACKUPTICS;
+
+    if (netgame && cmd) {
+        cmd->consistancy = bot_consistancy[bot->playernum][buf];
+        bot_consistancy[bot->playernum][buf] = bot->mobj->x;
+    }
 
     //if (!bot_control)
     //  return;
@@ -907,6 +988,8 @@ void B_Tic(mbot_t *bot) {
         break;
         //-----^
     }
+
+    bot->lastgametic = gametic;
 }
 
 void B_CheckInits(void) {
@@ -930,12 +1013,16 @@ void B_Ticker(void) {
 
     B_CheckInits();
 
+    if (paused) {
+        return;
+    }
+
     for (i = 0; i < MAXPLAYERS; i++) {
         if (bots[i].state != BST_PREINIT && bots[i].state != BST_NONE) {
             assert(bots[i].player && "Player unset in ticked bot!");
             assert(bots[i].mobj && "Mobj unset in ticked bot!");
 
-            B_Tic(&bots[i]);
+            B_TickBot(&bots[i]);
         }
     }
 }
